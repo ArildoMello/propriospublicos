@@ -6,6 +6,9 @@
   <title>GML - 2025 - Atendimentos em Próprios Públicos</title>
   <!-- Parser de CSV -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  <!-- jsPDF e AutoTable para geração de PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.3/jspdf.plugin.autotable.min.js"></script>
   <style>
     /* ======= THEME (Neon Azul) ======= */
     *{box-sizing:border-box}
@@ -34,7 +37,6 @@
 
     /* ======= LAYOUT ======= */
     .app{min-height:100vh; display:flex;}
-    /* Sidebar base */
     #sidebar{
       position:sticky; top:0; align-self:flex-start;
       width:var(--sb-w); height:100dvh;
@@ -64,11 +66,9 @@
     .nav a .label{white-space:nowrap; opacity:1; transform:translateX(0); transition: opacity .22s var(--ease), transform .22s var(--ease);}
     .nav a.active{background:linear-gradient(135deg, rgba(0,230,255,.25), rgba(47,123,255,.25)); border-color:rgba(130,180,255,.45); box-shadow:0 0 18px rgba(0,230,255,.18);}
 
-    /* Menu colapsado (desktop) – só ícones */
     .app.collapsed #sidebar{ width:var(--sb-wc); }
     .app.collapsed .nav a .label{ opacity:0; transform:translateX(-6px); pointer-events:none; }
 
-    /* Efeito de abertura (pulso neon) */
     @keyframes glowPulse{
       0%,100%{ box-shadow:0 0 0 rgba(0,230,255,0); }
       50%    { box-shadow:0 0 24px rgba(0,230,255,.35); }
@@ -81,7 +81,6 @@
     }
     .sidebar-opening .nav a .label{ animation:labelSlideIn .25s var(--ease) both; }
 
-    /* Ripple no clique do item */
     .nav a::after{
       content:"";
       position:absolute; inset:auto auto 0 0;
@@ -96,7 +95,6 @@
       transition:transform .45s var(--ease), opacity .45s var(--ease);
     }
 
-    /* Conteúdo */
     .content{flex:1; padding:22px; min-width:0}
     .container{
       max-width:1200px; margin:0 auto; background:linear-gradient(180deg,var(--glass), rgba(10,12,30,.45));
@@ -109,17 +107,16 @@
     }
     h1{
       font-size:clamp(1.8rem,1.2rem + 2.2vw,3rem); font-weight:900; letter-spacing:.3px; margin:6px 0;
-      background:linear-gradient(135deg,var(--grad-a),var(--grad-b),var(--grad-c));
+      background:linear-gradient(135deg,var(--grad-a),var--grad-b),var(--grad-c));
       -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent
     }
     .subtitle{color:var(--muted); font-weight:700}
 
-    /* Cards / Painéis / Linhas */
     .cards{display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:16px; margin-bottom:14px}
     .card{background:linear-gradient(135deg, rgba(0,230,255,.9), rgba(47,123,255,.9)); color:#fff; padding:18px; border-radius:18px; text-align:center}
     .card h3{font-size:2rem; margin:0 0 4px}
     .panel{background:linear-gradient(180deg, rgba(14,18,48,.7), rgba(8,10,28,.6)); border:1px solid var(--brd); border-radius:18px; overflow:hidden; margin-top:12px}
-    .panel-hd{background:linear-gradient(135deg,var(--grad-a),var(--grad-b)); padding:14px 16px; font-weight:900}
+    .panel-hd{background:linear-gradient(135deg,var(--grad-a),var(--grad-b)); padding:14px 16px; font-weight:900; display: flex; align-items: center; gap: 8px;}
     .row{display:flex; justify-content:space-between; align-items:center; gap:16px; padding:16px; border-top:1px solid rgba(130,160,255,.16)}
     .row:first-child{border-top:none}
     .row:hover{background:rgba(10,25,70,.35)}
@@ -133,7 +130,20 @@
     .tool input[type=search]{background:transparent; border:none; outline:none; color:#e9f3ff; width:100%}
     .footer{margin-top:14px; display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end}
 
-    /* Drawer mobile */
+    #gerarPDF {
+      margin-left: auto;
+      background: linear-gradient(135deg, var(--grad-a), var(--grad-b));
+      border: none;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 700;
+    }
+    #gerarPDF:hover {
+      box-shadow: var(--glow);
+    }
+
     #fabMenu{
       position:fixed; bottom:18px; right:18px; z-index:40; width:52px;height:52px; border-radius:50%;
       border:1px solid rgba(120,170,255,.35); background:linear-gradient(135deg, rgba(0,230,255,.9), rgba(47,123,255,.9));
@@ -144,7 +154,6 @@
       z-index:30; display:none
     }
 
-    /* Responsivo */
     @media (max-width:1024px){
       #fabMenu{display:block}
       #sidebar{position:fixed; left:0; top:0; bottom:0; transform:translateX(-110%); }
@@ -158,12 +167,10 @@
   </style>
 </head>
 <body data-page="home">
-  <!-- FAB do menu (apenas mobile) -->
   <button id="fabMenu" aria-label="Abrir menu" title="Abrir menu">☰</button>
   <div class="scrim" id="scrim"></div>
 
   <div class="app" id="app">
-    <!-- SIDEBAR -->
     <aside id="sidebar" aria-label="Menu lateral">
       <div class="sb-row sb-head">
         <span class="dot" aria-hidden="true"></span>
@@ -177,9 +184,7 @@
       </nav>
     </aside>
 
-    <!-- CONTEÚDO -->
     <main class="content" id="content" tabindex="-1">
-      <!-- ===== Atendimentos (PRINCIPAL) ===== -->
       <section id="atendimentos-section">
         <div class="container">
           <div class="header">
@@ -208,7 +213,6 @@
         </div>
       </section>
 
-      <!-- ===== Tipos de Atendimento ===== -->
       <section id="tipos-section" class="hidden">
         <div class="container">
           <div class="header">
@@ -226,7 +230,6 @@
   </div>
 
   <script>
-    /* ===== MENU / DRAWER ANIMADO ===== */
     const app = document.getElementById('app');
     const menuBtn = document.getElementById('menuBtn');
     const fab = document.getElementById('fabMenu');
@@ -234,7 +237,6 @@
     const nav = document.getElementById('nav');
     const mm = window.matchMedia('(max-width:1024px)');
 
-    // Inicia colapsado no desktop
     if (!mm.matches) app.classList.add('collapsed');
 
     function openDrawer(){ app.classList.add('drawer-open'); }
@@ -266,31 +268,29 @@
 
     mm.addEventListener('change', (ev)=>{
       if (ev.matches){
-        app.classList.remove('collapsed'); // mobile não usa colapso
+        app.classList.remove('collapsed');
         closeDrawer();
       } else {
         app.classList.remove('drawer-open');
-        app.classList.add('collapsed');    // volta colapsado no desktop
+        app.classList.add('collapsed');
       }
     });
 
-    // Ripple no clique do item do menu
     nav.addEventListener('click', (e)=>{
       const a = e.target.closest('a'); if(!a) return;
       const rect = a.getBoundingClientRect();
       const rx = (e.clientX - rect.left) - 110;
-      const ry = (e.clientY - rect.top)  - 110;
+      const ry = (e.clientY - rect.top) - 110;
       a.style.setProperty('--rx', rx + 'px');
       a.style.setProperty('--ry', ry + 'px');
       a.classList.add('rippling');
       setTimeout(()=> a.classList.remove('rippling'), 460);
     });
 
-    /* ===== TROCA DE SEÇÕES (SPA-like) ===== */
     const loaded = { atendimentos:false, tipos:false };
     nav.addEventListener('click', (e)=>{
       const a = e.target.closest('a'); if(!a) return;
-      const targetId = a.getAttribute('data-target'); if(!targetId) return;
+      const targetId = a.getAttribute('data-target'); if(!a) return;
 
       e.preventDefault();
       document.querySelectorAll('main > section').forEach(s=> s.classList.add('hidden'));
@@ -305,7 +305,6 @@
       if(targetId==='atendimentos-section' && !loaded.atendimentos) fetchAtendimentos?.();
     });
 
-    /* ===== UTILS ===== */
     const $ = (sel) => document.querySelector(sel);
     const el = (tag, cls) => { const x = document.createElement(tag); if (cls) x.className = cls; return x; };
     const numberize = (v) => { if (v==null) return 0; const s=String(v).replace(/\./g,'').replace(/,/g,'.').replace(/[^0-9.-]/g,'').trim(); const n=s===''?0:Number(s); return Number.isFinite(n)?n:0; };
@@ -313,7 +312,6 @@
     const createCard = (val,label) => { const c=el('div','card'); c.innerHTML=`<h3>${val}</h3><p>${label}</p>`; return c; }
     const makePill = (label,val) => { const d=el('div','pill'); d.innerHTML=`${label}<br><b>${val}</b>`; return d; }
 
-    /* ===== ATENDIMENTOS (6 colunas: Cód. Pró., Nome, Tipo de Área, Secretaria, Região, Total Ocorrências, Detidos) ===== */
     const SHEET_AT = '1aDCHjlCjq2UJ34DupeLTk_wwuK6vu14E';
     const GID_AT = '1768351071';
     let dataAT=[], grouped={};
@@ -421,10 +419,12 @@
                       .filter(r=> Array.isArray(r) && r.some(c=> String(c).trim()!=='') );
         normalizeAT(rows); if(!dataAT.length){ alert('CSV de Atendimentos sem dados válidos.'); return; }
         aggregateAT(); renderAT(); loaded.atendimentos = true;
-      }catch(e){ console.error(e); alert('Erro ao carregar Atendimentos. Verifique se a planilha está pública.'); }
+      }catch(e){ 
+        console.error('Erro ao carregar Atendimentos:', e); 
+        alert('Erro ao carregar Atendimentos. Verifique se a planilha está pública.'); 
+      }
     }
 
-    /* ===== TIPOS DE ATENDIMENTO (5 colunas: Cód. Pró., Nome, Tipo de Crime, Quantidade, Detidos) ===== */
     const GID_TP = '764715934';
     let dataTP=[], groupedTP={};
     function normalizeTP(rows){
@@ -501,6 +501,101 @@
       );
       t.append(left,stats); list.append(t);
     }
+    function generatePDF() {
+      try {
+        const codPro = Object.keys(groupedTP)[0];
+        if (!codPro) {
+          alert('Nenhum dado disponível para gerar o PDF.');
+          return;
+        }
+        const g = groupedTP[codPro];
+        const nome = g.nome;
+        const crimes = Object.entries(g.crimes).map(([tipo, d]) => [tipo, d.quantidade, d.detidos]);
+        const totalQuant = g.totalQuantidade;
+        const totalDet = g.totalDetidos;
+        const date = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({
+          orientation: 'portrait',
+          unit: 'mm',
+          format: 'a4'
+        });
+
+        // Definir margens
+        const marginLeft = 15;
+        const marginRight = 15;
+        const pageWidth = 210; // A4 width in mm
+        const usableWidth = pageWidth - marginLeft - marginRight; // 180mm
+
+        // Título
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(14);
+        const titleLines = [
+          'PREFEITURA DO MUNICÍPIO DE LONDRINA',
+          'ESTADO DO PARANÁ',
+          'SECRETARIA MUNICIPAL DE DEFESA SOCIAL',
+          'GUARDA MUNICIPAL DE LONDRINA - DIRETORIA OPERACIONAL'
+        ];
+        let y = 20;
+        titleLines.forEach(line => {
+          doc.text(line, pageWidth / 2, y, { align: 'center' });
+          y += 8;
+        });
+
+        // Data de emissão
+        y += 10;
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`Data de emissão: ${date}`, pageWidth / 2, y, { align: 'center' });
+
+        // Nome do próprio público e código
+        y += 10;
+        doc.text(`Nome do Próprio Público: ${nome} (Cód. Pró.: ${codPro})`, marginLeft, y);
+
+        // Tabela
+        y += 10;
+        doc.autoTable({
+          startY: y,
+          head: [['Tipo de Crime', 'Quantidade', 'Detidos']],
+          body: crimes,
+          foot: [['Total Geral', totalQuant, totalDet]],
+          theme: 'grid',
+          margin: { left: marginLeft, right: marginRight },
+          headStyles: { 
+            fillColor: [41, 128, 185],
+            textColor: [255, 255, 255],
+            fontStyle: 'bold',
+            fontSize: 11
+          },
+          bodyStyles: { 
+            fontSize: 10,
+            overflow: 'linebreak' // Quebra de linha para textos longos
+          },
+          footStyles: { 
+            fillColor: [200, 200, 200],
+            textColor: [0, 0, 0],
+            fontStyle: 'bold',
+            fontSize: 11
+          },
+          styles: { 
+            font: 'helvetica', 
+            cellPadding: 2,
+            minCellHeight: 6
+          },
+          columnStyles: {
+            0: { cellWidth: usableWidth * 0.65 }, // 65% do espaço (~117mm)
+            1: { cellWidth: usableWidth * 0.175, halign: 'right' }, // 17.5% (~31.5mm)
+            2: { cellWidth: usableWidth * 0.175, halign: 'right' }  // 17.5% (~31.5mm)
+          }
+        });
+
+        doc.save(`Relatorio_${codPro}_${date.replace(/\//g, '-')}.pdf`);
+      } catch (e) {
+        console.error('Erro ao gerar PDF:', e);
+        alert('Erro ao gerar o PDF. Verifique o console para mais detalhes.');
+      }
+    }
     async function fetchTipos(codProFilter=null){
       try{
         const response = await fetch(csvUrl(SHEET_AT, GID_TP));
@@ -518,12 +613,27 @@
         $('#tipos-section').classList.remove('hidden');
         nav.querySelectorAll('a').forEach(x=> x.classList.remove('active'));
         nav.querySelector('[data-target="tipos-section"]').classList.add('active');
-        renderTP(); 
+        renderTP();
+        const hd = $('#tp-panel .panel-hd');
+        let btn = $('#gerarPDF');
+        if (codProFilter) {
+          if (!btn) {
+            btn = el('button', 'gerarPDF');
+            btn.id = 'gerarPDF';
+            btn.textContent = 'Gerar PDF';
+            btn.addEventListener('click', generatePDF);
+            hd.appendChild(btn);
+          }
+        } else {
+          if (btn) btn.remove();
+        } 
         loaded.tipos = true;
-      }catch(e){ console.error(e); alert('Erro ao carregar Tipos de Atendimento. Verifique se a planilha está pública.'); }
+      }catch(e){ 
+        console.error('Erro ao carregar Tipos de Atendimento:', e); 
+        alert('Erro ao carregar Tipos de Atendimento. Verifique se a planilha está pública.'); 
+      }
     }
 
-    /* ===== Inicialização ===== */
     window.addEventListener('load', ()=>{
       document.getElementById('atendimentos-section').classList.remove('hidden');
       fetchAtendimentos();
