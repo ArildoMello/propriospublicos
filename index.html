@@ -43,7 +43,7 @@
       width:var(--sb-w); height:100dvh;
       background:linear-gradient(180deg, var(--glass), rgba(10,12,30,.45));
       border-right:1px solid var(--brd); backdrop-filter: blur(14px);
-      padding:14px 10px; z-index:20;
+      padding:14px 20px; z-index:20;
       transition:
         width .28s var(--ease),
         transform .25s var(--ease);
@@ -108,8 +108,14 @@
     }
     h1{
       font-size:clamp(1.8rem,1.2rem + 2.2vw,3rem); font-weight:900; letter-spacing:.3px; margin:6px 0;
-      background:linear-gradient(135deg,var(--grad-a),var--grad-b),var(--grad-c));
+      background:linear-gradient(135deg,var(--grad-a),var(--grad-b),var(--grad-c));
       -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent
+    }
+    .logo {
+      width: 40px;
+      height: auto;
+      vertical-align: middle;
+      margin-left: 20px;
     }
     .subtitle{color:var(--muted); font-weight:700}
 
@@ -189,9 +195,7 @@
       <section id="atendimentos-section">
         <div class="container">
           <div class="header">
-            <h1>Atendimentos em 2025</h1>
-           <img src="https://arildomello.github.io/propriospublicos/assets/img/Ico.ico" 
-            alt="Ícone GML" class="logo" style="vertical-align: middle; margin-left: 10px;">
+            <h1>Atendimentos em 2025<img src="https://arildomello.github.io/propriospublicos/assets/img/Ico.ico" alt="Ícone GML" class="logo"></h1>
             <div class="subtitle">Resumo de atendimentos em Próprios Públicos por Secretarias, ocorrências e detidos</div>
           </div>
 
@@ -219,7 +223,7 @@
       <section id="tipos-section" class="hidden">
         <div class="container">
           <div class="header">
-            <h1>Tipos de Atendimento</h1>
+            <h1>Tipos de Atendimento<img src="https://arildomello.github.io/propriospublicos/assets/img/Ico.ico" alt="Ícone GML" class="logo"></h1>
             <div class="subtitle">Resumo por local, tipo de crime, quantidade e detidos</div>
           </div>
           <div id="tp-cards" class="cards hidden"></div>
@@ -545,10 +549,11 @@
           doc.text(line, pageWidth / 2, y, { align: 'center' });
           y += 8;
         });
-        // Logo GML abaixo do título
-        doc.addImage('https://arildomello.github.io/propriospublicos/assets/img/Ico.ico', 'ICO', pageWidth / 2 - 25, y + 2, 50, 15);
+        // Logo GML como PNG com tamanho reduzido
+        doc.addImage('https://arildomello.github.io/propriospublicos/assets/img/gm.png', 'PNG', pageWidth / 2 - 15, y + 2, 15, 10);
+
         // Data de emissão
-        y += 10;
+        y += 12;
         doc.setFontSize(12);
         doc.setFont('helvetica', 'normal');
         doc.text(`Data de emissão: ${date}`, pageWidth / 2, y, { align: 'center' });
