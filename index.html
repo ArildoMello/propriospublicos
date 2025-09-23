@@ -583,9 +583,9 @@
         // Adicionar data de emissão e nome do próprio público (apenas na primeira página)
         let y = headerHeight + 5;
         doc.setFontSize(10);
-        doc.text(`Data de emissão: ${date}`, marginLeft, y);
+        doc.text(`\nData de emissão: ${date}`, marginLeft, y);
         y += 5;
-        doc.text(`Nome do Próprio Público: ${nome} (Cód. Pró.: ${codPro})`, marginLeft, y);
+        doc.text(`\nNome do Próprio Público: ${nome} (Cód. Pró.: ${codPro})`, marginLeft, y);
 
         // Adicionar tabela com posições definidas
         doc.autoTable({
