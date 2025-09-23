@@ -508,7 +508,7 @@
       );
       t.append(left,stats); list.append(t);
     }
-    async function generatePDF() {
+        async function generatePDF() {
       try {
         const codPro = Object.keys(groupedTP)[0];
         if (!codPro) {
@@ -535,7 +535,9 @@
         const marginLeft = 15;
         const marginRight = 15;
         const usableWidth = pageWidth - marginLeft - marginRight; // 180mm
-        const headerHeight = 25; // Altura do cabeçalho ajustada para múltiplas linhas
+        const headerHeight = 25; // Altura do cabeçalho
+        const tableStartY = 40; // Posição de início da tabela
+        const tableEndY = pageHeight - 20; // Posição de fim da tabela (deixando margem inferior)
 
         // Converte imagem URL em Base64
         const toBase64 = (url) => {
@@ -548,20 +550,23 @@
             }));
         };
 
-        // Carregar a imagem do logo como base64
-        const logoBase64 = await toBase64('https://arildomello.github.io/propriospublicos/assets/img/gm.png');
+        // Carregar as imagens do logo como base64
+        const logoBase64Right = await toBase64('https://arildomello.github.io/propriospublicos/assets/img/gm.png');
+        const logoBase64Left = await toBase64('https://arildomello.github.io/propriospublicos/assets/img/londrina.png');
 
         // Função para adicionar cabeçalho em todas as páginas
         const addHeader = () => {
+          // Logo no canto superior esquerdo
+          doc.addImage(logoBase64Left, 'PNG', marginLeft, 5, 20, 20);
           // Logo no canto superior direito
-          doc.addImage(logoBase64, 'PNG', pageWidth - 25, 5, 20, 20);
+          doc.addImage(logoBase64Right, 'PNG', pageWidth - 25, 5, 20, 20);
 
           // Título com quebras de linha
           const titleLines = [
-            'PREFEITURA DO MUNICÍPIO DE LONDRINA\n',
-            'ESTADO DO PARANÁ\n',
-            'SECRETARIA MUNICIPAL DE DEFESA SOCIAL\n',
-            'GUARDA MUNICIPAL DE LONDRINA - DIRETORIA OPERACIONAL\n\n\n'
+            'PREFEITURA DO MUNICÍPIO DE LONDRINA',
+            'ESTADO DO PARANÁ',
+            'SECRETARIA MUNICIPAL DE DEFESA SOCIAL',
+            'GUARDA MUNICIPAL DE LONDRINA - DIRETORIA OPERACIONAL'
           ];
           doc.setFontSize(10);
           doc.setTextColor(0, 0, 0); // Texto preto
@@ -581,16 +586,17 @@
         doc.text(`Data de emissão: ${date}`, marginLeft, y);
         y += 5;
         doc.text(`Nome do Próprio Público: ${nome} (Cód. Pró.: ${codPro})`, marginLeft, y);
-        y += 10;
 
-        // Adicionar tabela
+        // Adicionar tabela com posições definidas
         doc.autoTable({
-          startY: y, // Iniciar tabela abaixo das informações adicionais
+          startY: tableStartY, // Início da tabela em 40mm
+          margin: { top: tableStartY, left: marginLeft, right: marginRight },
+          pageBreak: 'auto', // Quebra de página automática
+          tableWidth: usableWidth,
           head: [['Tipo de Crime', 'Quantidade', 'Detidos']],
           body: crimes,
           foot: [['Total Geral', totalQuant, totalDet]],
           theme: 'grid',
-          margin: { left: marginLeft, right: marginRight },
           headStyles: { 
             fillColor: [41, 128, 185],
             textColor: [255, 255, 255],
@@ -618,10 +624,12 @@
             2: { cellWidth: usableWidth * 0.175, halign: 'right' }
           },
           didDrawPage: (data) => {
-            // Adicionar cabeçalho em novas páginas
+            // Adicionar cabeçalho em todas as páginas
             addHeader();
-            // Ajustar o startY para a nova página (sem as informações adicionais)
-            data.settings.startY = headerHeight + 5;
+            // Garantir que a tabela não ultrapasse o final da página
+            if (data.cursor.y > tableEndY) {
+              data.cursor.y = tableStartY; // Reinicia a posição da tabela na próxima página
+            }
           }
         });
 
