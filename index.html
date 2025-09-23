@@ -196,7 +196,7 @@
         <div class="container">
           <div class="header">
             <h1>Atendimentos em 2025<img src="https://arildomello.github.io/propriospublicos/assets/img/Ico.ico" alt="Ícone GML" class="logo"></h1>
-            <div class="subtitle">Resumo de atendimentos em Próprios Públicos por Secretarias, ocorrências e detidos</div>
+            <div class="subtitle">Resumo de atendimentos em Próprios Públicos por Secretarias, ocorrências e detidos, atualizado até 21/09/2024</div>
           </div>
 
           <div id="at-tools" class="toolbar hidden">
@@ -508,103 +508,137 @@
       );
       t.append(left,stats); list.append(t);
     }
-    function generatePDF() {
-      try {
-        const codPro = Object.keys(groupedTP)[0];
-        if (!codPro) {
-          alert('Nenhum dado disponível para gerar o PDF.');
-          return;
-        }
-        const g = groupedTP[codPro];
-        const nome = g.nome;
-        const crimes = Object.entries(g.crimes).map(([tipo, d]) => [tipo, d.quantidade, d.detidos]);
-        const totalQuant = g.totalQuantidade;
-        const totalDet = g.totalDetidos;
-        const date = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF({
-          orientation: 'portrait',
-          unit: 'mm',
-          format: 'a4'
-        });
-
-        // Definir margens
-        const marginLeft = 15;
-        const marginRight = 15;
-        const pageWidth = 210; // A4 width in mm
-        const usableWidth = pageWidth - marginLeft - marginRight; // 180mm
-
-        // Título
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(14);
-        const titleLines = [
-          'PREFEITURA DO MUNICÍPIO DE LONDRINA',
-          'ESTADO DO PARANÁ',
-          'SECRETARIA MUNICIPAL DE DEFESA SOCIAL',
-          'GUARDA MUNICIPAL DE LONDRINA - DIRETORIA OPERACIONAL'
-        ];
-        let y = 20;
-        titleLines.forEach(line => {
-          doc.text(line, pageWidth / 2, y, { align: 'center' });
-          y += 8;
-        });
-        // Logo GML como PNG com tamanho reduzido
-        // doc.addImage('https://arildomello.github.io/propriospublicos/assets/img/gm.png', 'PNG', pageWidth / 2 - 15, y + 2, 15, 15);
-
-        // Data de emissão
-        y += 12;
-        doc.setFontSize(12);
-        doc.setFont('helvetica', 'normal');
-        doc.text(`Data de emissão: ${date}`, pageWidth / 2, y, { align: 'center' });
-
-        // Nome do próprio público e código
-        y += 10;
-        doc.text(`Nome do Próprio Público: ${nome} (Cód. Pró.: ${codPro})`, marginLeft, y);
-
-        // Tabela
-        y += 10;
-        doc.autoTable({
-          startY: y,
-          head: [['Tipo de Crime', 'Quantidade', 'Detidos']],
-          body: crimes,
-          foot: [['Total Geral', totalQuant, totalDet]],
-          theme: 'grid',
-          margin: { left: marginLeft, right: marginRight },
-          headStyles: { 
-            fillColor: [41, 128, 185],
-            textColor: [255, 255, 255],
-            fontStyle: 'bold',
-            fontSize: 11
-          },
-          bodyStyles: { 
-            fontSize: 10,
-            overflow: 'linebreak' // Quebra de linha para textos longos
-          },
-          footStyles: { 
-            fillColor: [200, 200, 200],
-            textColor: [0, 0, 0],
-            fontStyle: 'bold',
-            fontSize: 11
-          },
-          styles: { 
-            font: 'helvetica', 
-            cellPadding: 2,
-            minCellHeight: 6
-          },
-          columnStyles: {
-            0: { cellWidth: usableWidth * 0.65 }, // 65% do espaço (~117mm)
-            1: { cellWidth: usableWidth * 0.175, halign: 'right' }, // 17.5% (~31.5mm)
-            2: { cellWidth: usableWidth * 0.175, halign: 'right' }  // 17.5% (~31.5mm)
-          }
-        });
-
-        doc.save(`Relatorio_${codPro}_${date.replace(/\//g, '-')}.pdf`);
-      } catch (e) {
-        console.error('Erro ao gerar PDF:', e);
-        alert('Erro ao gerar o PDF. Verifique o console para mais detalhes.');
-      }
+async function generatePDF() {
+  try {
+    const codPro = Object.keys(groupedTP)[0];
+    if (!codPro) {
+      alert('Nenhum dado disponível para gerar o PDF.');
+      return;
     }
+    const g = groupedTP[codPro];
+    const nome = g.nome;
+    const crimes = Object.entries(g.crimes).map(([tipo, d]) => [tipo, d.quantidade, d.detidos]);
+    const totalQuant = g.totalQuantidade;
+    const totalDet = g.totalDetidos;
+    const date = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4'
+    });
+
+    // Definir margens e dimensões da página
+    const pageWidth = doc.internal.pageSize.getWidth(); // 210mm
+    const pageHeight = doc.internal.pageSize.getHeight(); // 297mm
+    const marginLeft = 15;
+    const marginRight = 15;
+    const usableWidth = pageWidth - marginLeft - marginRight; // 180mm
+    const headerHeight = 40; // Altura do cabeçalho fixo
+
+    // Função para converter imagem para base64
+    const toBase64 = (url) => {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.setAttribute("crossOrigin", "anonymous");
+        img.onload = function () {
+          const canvas = document.createElement("canvas");
+          canvas.width = this.width;
+          canvas.height = this.height;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(this, 0, 0);
+          resolve(canvas.toDataURL("image/jpeg"));
+        };
+        img.onerror = () => reject(new Error("Erro ao carregar imagem"));
+        img.src = url;
+      });
+    };
+
+    // Carregar a imagem de fundo como base64
+    const backgroundImageBase64 = await toBase64('https://arildomello.github.io/propriospublicos/assets/img/fundo.jpg');
+
+    // Função para adicionar cabeçalho em todas as páginas
+    const addHeader = (data) => {
+      doc.addImage(
+        backgroundImageBase64,
+        'JPEG',
+        0,
+        0,
+        pageWidth,
+        headerHeight
+      );
+      // Adicionar texto sobre o cabeçalho
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(12);
+      const titleLines = [
+        'PREFEITURA DO MUNICÍPIO DE LONDRINA',
+        'ESTADO DO PARANÁ',
+        'SECRETARIA MUNICIPAL DE DEFESA SOCIAL',
+        'GUARDA MUNICIPAL DE LONDRINA - DIRETORIA OPERACIONAL'
+      ];
+      let y = 10;
+      titleLines.forEach(line => {
+        doc.setTextColor(255, 255, 255); // Texto branco para contraste
+        doc.text(line, pageWidth / 2, y, { align: 'center' });
+        y += 6;
+      });
+      doc.setFontSize(12);
+      doc.text(`Data de emissão: ${date}`, pageWidth / 2, y + 2, { align: 'center' });
+      doc.text(`Nome do Próprio Público: ${nome} (Cód. Pró.: ${codPro})`, marginLeft, y + 8);
+    };
+
+    // Adicionar cabeçalho à primeira página
+    addHeader();
+
+    // Adicionar tabela
+    doc.autoTable({
+      startY: headerHeight + 5, // Iniciar tabela logo abaixo do cabeçalho
+      head: [['Tipo de Crime', 'Quantidade', 'Detidos']],
+      body: crimes,
+      foot: [['Total Geral', totalQuant, totalDet]],
+      theme: 'grid',
+      margin: { left: marginLeft, right: marginRight },
+      headStyles: { 
+        fillColor: [41, 128, 185],
+        textColor: [255, 255, 255],
+        fontStyle: 'bold',
+        fontSize: 11
+      },
+      bodyStyles: { 
+        fontSize: 10,
+        overflow: 'linebreak'
+      },
+      footStyles: { 
+        fillColor: [200, 200, 200],
+        textColor: [0, 0, 0],
+        fontStyle: 'bold',
+        fontSize: 11
+      },
+      styles: { 
+        font: 'helvetica', 
+        cellPadding: 2,
+        minCellHeight: 6
+      },
+      columnStyles: {
+        0: { cellWidth: usableWidth * 0.65 },
+        1: { cellWidth: usableWidth * 0.175, halign: 'right' },
+        2: { cellWidth: usableWidth * 0.175, halign: 'right' }
+      },
+      didDrawPage: (data) => {
+        // Adicionar cabeçalho em novas páginas
+        addHeader(data);
+        // Ajustar o startY para a nova página
+        data.settings.startY = headerHeight + 5;
+      }
+    });
+
+    doc.save(`Relatorio_${codPro}_${date.replace(/\//g, '-')}.pdf`);
+  } catch (e) {
+    console.error('Erro ao gerar PDF:', e);
+    alert('Erro ao gerar o PDF. Verifique o console para mais detalhes.');
+  }
+}
     async function fetchTipos(codProFilter=null){
       try{
         const response = await fetch(csvUrl(SHEET_AT, GID_TP));
