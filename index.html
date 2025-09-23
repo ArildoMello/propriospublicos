@@ -508,143 +508,137 @@
       );
       t.append(left,stats); list.append(t);
     }
-    async function generatePDF() {
-      try {
-        const codPro = Object.keys(groupedTP)[0];
-        if (!codPro) {
-          alert('Nenhum dado disponível para gerar o PDF.');
-          return;
-        }
-        const g = groupedTP[codPro];
-        const nome = g.nome;
-        const crimes = Object.entries(g.crimes).map(([tipo, d]) => [tipo, d.quantidade, d.detidos]);
-        const totalQuant = g.totalQuantidade;
-        const totalDet = g.totalDetidos;
-        const date = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF({
-          orientation: 'portrait',
-          unit: 'mm',
-          format: 'a4'
-        });
-
-        // Definir margens
-        const marginLeft = 15;
-        const marginRight = 15;
-        const pageWidth = 210; // A4 width in mm
-        const pageHeight = 297; // A4 height in mm
-        const usableWidth = pageWidth - marginLeft - marginRight; // 180mm
-
-        // Função para adicionar fundo a todas as páginas
-        const addBackgroundImage = async () => {
-          return new Promise((resolve, reject) => {
-            const img = new Image();
-            img.crossOrigin = 'Anonymous';
-            img.src = 'https://arildomello.github.io/propriospublicos/assets/img/fundo.jpg';
-            img.onload = () => {
-              // Adicionar imagem de fundo em todas as páginas
-              const pages = doc.internal.getNumberOfPages();
-              for (let i = 1; i <= pages; i++) {
-                doc.setPage(i);
-                doc.addImage(img, 'JPEG', 0, 0, pageWidth, pageHeight);
-              }
-              resolve();
-            };
-            img.onerror = () => {
-              console.error('Erro ao carregar a imagem de fundo.');
-              reject(new Error('Falha ao carregar a imagem de fundo.'));
-            };
-          });
-        };
-
-        // Adicionar fundo antes de desenhar o conteúdo
-        await addBackgroundImage();
-
-        // Resetar para a primeira página para adicionar o conteúdo
-        doc.setPage(1);
-
-        // Definir fundo branco semi-transparente para o conteúdo
-        doc.setFillColor(255, 255, 255, 0.9); // Branco com 90% de opacidade
-        doc.rect(10, 10, pageWidth - 20, pageHeight - 20, 'F');
-
-        // Título
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(14);
-        const titleLines = [
-          'PREFEITURA DO MUNICÍPIO DE LONDRINA',
-          'ESTADO DO PARANÁ',
-          'SECRETARIA MUNICIPAL DE DEFESA SOCIAL',
-          'GUARDA MUNICIPAL DE LONDRINA - DIRETORIA OPERACIONAL'
-        ];
-        let y = 20;
-        titleLines.forEach(line => {
-          doc.text(line, pageWidth / 2, y, { align: 'center' });
-          y += 8;
-        });
-
-        // Data de emissão
-        y += 12;
-        doc.setFontSize(12);
-        doc.setFont('helvetica', 'normal');
-        doc.text(`Data de emissão: ${date}`, pageWidth / 2, y, { align: 'center' });
-
-        // Nome do próprio público e código
-        y += 10;
-        doc.text(`Nome do Próprio Público: ${nome} (Cód. Pró.: ${codPro})`, marginLeft, y);
-
-        // Tabela
-        y += 10;
-        doc.autoTable({
-          startY: y,
-          head: [['Tipo de Crime', 'Quantidade', 'Detidos']],
-          body: crimes,
-          foot: [['Total Geral', totalQuant, totalDet]],
-          theme: 'grid',
-          margin: { left: marginLeft, right: marginRight },
-          headStyles: { 
-            fillColor: [41, 128, 185],
-            textColor: [255, 255, 255],
-            fontStyle: 'bold',
-            fontSize: 11
-          },
-          bodyStyles: { 
-            fontSize: 10,
-            overflow: 'linebreak' // Quebra de linha para textos longos
-          },
-          footStyles: { 
-            fillColor: [200, 200, 200],
-            textColor: [0, 0, 0],
-            fontStyle: 'bold',
-            fontSize: 11
-          },
-          styles: { 
-            font: 'helvetica', 
-            cellPadding: 2,
-            minCellHeight: 6
-          },
-          columnStyles: {
-            0: { cellWidth: usableWidth * 0.65 }, // 65% do espaço (~117mm)
-            1: { cellWidth: usableWidth * 0.175, halign: 'right' }, // 17.5% (~31.5mm)
-            2: { cellWidth: usableWidth * 0.175, halign: 'right' }  // 17.5% (~31.5mm)
-          },
-          didDrawPage: () => {
-            // Adicionar imagem de fundo em novas páginas criadas pela tabela
-            if (doc.internal.getCurrentPageInfo().pageNumber > 1) {
-              doc.addImage('https://arildomello.github.io/propriospublicos/assets/img/fundo.jpg', 'JPEG', 0, 0, pageWidth, pageHeight);
-              // Reaplicar fundo branco semi-transparente
-              doc.setFillColor(255, 255, 255, 0.9);
-              doc.rect(10, 10, pageWidth - 20, pageHeight - 20, 'F');
-            }
-          }
-        });
-
-        doc.save(`Relatorio_${codPro}_${date.replace(/\//g, '-')}.pdf`);
-      } catch (e) {
-        console.error('Erro ao gerar PDF:', e);
-        alert('Erro ao gerar o PDF. Verifique o console para mais detalhes.');
-      }
+   async function generatePDF() {
+  try {
+    const codPro = Object.keys(groupedTP)[0];
+    if (!codPro) {
+      alert('Nenhum dado disponível para gerar o PDF.');
+      return;
     }
+    const g = groupedTP[codPro];
+    const nome = g.nome;
+    const crimes = Object.entries(g.crimes).map(([tipo, d]) => [tipo, d.quantidade, d.detidos]);
+    const totalQuant = g.totalQuantidade;
+    const totalDet = g.totalDetidos;
+    const date = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4'
+    });
+
+    // Definir margens
+    const marginLeft = 15;
+    const marginRight = 15;
+    const pageWidth = 210; // A4 width in mm
+    const pageHeight = 297; // A4 height in mm
+    const usableWidth = pageWidth - marginLeft - marginRight; // 180mm
+
+    // Função para adicionar fundo a todas as páginas
+    const addBackgroundImage = async () => {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = 'Anonymous';
+        img.src = 'https://arildomello.github.io/propriospublicos/assets/img/fundo.jpg';
+        img.onload = () => {
+          // Adicionar imagem de fundo em todas as páginas
+          for (let i = 1; i <= doc.internal.getNumberOfPages(); i++) {
+            doc.setPage(i);
+            doc.addImage(img, 'JPEG', 0, 0, pageWidth, pageHeight);
+          }
+          resolve();
+        };
+        img.onerror = () => {
+          console.error('Erro ao carregar a imagem de fundo.');
+          reject(new Error('Falha ao carregar a imagem de fundo.'));
+        };
+      });
+    };
+
+    // Adicionar fundo antes de desenhar o conteúdo
+    await addBackgroundImage();
+
+    // Resetar para a primeira página para adicionar o conteúdo
+    doc.setPage(1);
+
+    // Adicionar conteúdo sobre a imagem
+    // Título
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(14);
+    const titleLines = [
+      'PREFEITURA DO MUNICÍPIO DE LONDRINA',
+      'ESTADO DO PARANÁ',
+      'SECRETARIA MUNICIPAL DE DEFESA SOCIAL',
+      'GUARDA MUNICIPAL DE LONDRINA - DIRETORIA OPERACIONAL'
+    ];
+    let y = 20;
+    titleLines.forEach(line => {
+      doc.text(line, pageWidth / 2, y, { align: 'center' });
+      y += 8;
+    });
+
+    // Data de emissão
+    y += 12;
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Data de emissão: ${date}`, pageWidth / 2, y, { align: 'center' });
+
+    // Nome do próprio público e código
+    y += 10;
+    doc.text(`Nome do Próprio Público: ${nome} (Cód. Pró.: ${codPro})`, marginLeft, y);
+
+    // Tabela
+    y += 10;
+    doc.autoTable({
+      startY: y,
+      head: [['Tipo de Crime', 'Quantidade', 'Detidos']],
+      body: crimes,
+      foot: [['Total Geral', totalQuant, totalDet]],
+      theme: 'grid',
+      margin: { left: marginLeft, right: marginRight },
+      headStyles: { 
+        fillColor: [41, 128, 185],
+        textColor: [255, 255, 255],
+        fontStyle: 'bold',
+        fontSize: 11
+      },
+      bodyStyles: { 
+        fontSize: 10,
+        overflow: 'linebreak' // Quebra de linha para textos longos
+      },
+      footStyles: { 
+        fillColor: [200, 200, 200],
+        textColor: [0, 0, 0],
+        fontStyle: 'bold',
+        fontSize: 11
+      },
+      styles: { 
+        font: 'helvetica', 
+        cellPadding: 2,
+        minCellHeight: 6
+      },
+      columnStyles: {
+        0: { cellWidth: usableWidth * 0.65 }, // 65% do espaço (~117mm)
+        1: { cellWidth: usableWidth * 0.175, halign: 'right' }, // 17.5% (~31.5mm)
+        2: { cellWidth: usableWidth * 0.175, halign: 'right' }  // 17.5% (~31.5mm)
+      },
+      didDrawPage: (data) => {
+        // Reaplicar imagem de fundo em novas páginas
+        doc.addImage('https://arildomello.github.io/propriospublicos/assets/img/fundo.jpg', 'JPEG', 0, 0, pageWidth, pageHeight);
+        // Adicionar fundo branco semi-transparente sobre a imagem
+        doc.setFillColor(255, 255, 255, 0.9); // Branco com 90% de opacidade
+        doc.rect(marginLeft - 5, 10, usableWidth + 10, pageHeight - 20, 'F');
+      }
+    });
+
+    doc.save(`Relatorio_${codPro}_${date.replace(/\//g, '-')}.pdf`);
+  } catch (e) {
+    console.error('Erro ao gerar PDF:', e);
+    alert('Erro ao gerar o PDF. Verifique o console para mais detalhes.');
+  }
+}
     async function fetchTipos(codProFilter=null){
       try{
         const response = await fetch(csvUrl(SHEET_AT, GID_TP));
