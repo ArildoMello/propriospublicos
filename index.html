@@ -508,7 +508,7 @@
       );
       t.append(left,stats); list.append(t);
     }
-    function generatePDF() {
+    async function generatePDF() {
       try {
         const codPro = Object.keys(groupedTP)[0];
         if (!codPro) {
@@ -533,7 +533,40 @@
         const marginLeft = 15;
         const marginRight = 15;
         const pageWidth = 210; // A4 width in mm
+        const pageHeight = 297; // A4 height in mm
         const usableWidth = pageWidth - marginLeft - marginRight; // 180mm
+
+        // Função para adicionar fundo a todas as páginas
+        const addBackgroundImage = async () => {
+          return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.crossOrigin = 'Anonymous';
+            img.src = 'https://arildomello.github.io/propriospublicos/assets/img/fundo.jpg';
+            img.onload = () => {
+              // Adicionar imagem de fundo em todas as páginas
+              const pages = doc.internal.getNumberOfPages();
+              for (let i = 1; i <= pages; i++) {
+                doc.setPage(i);
+                doc.addImage(img, 'JPEG', 0, 0, pageWidth, pageHeight);
+              }
+              resolve();
+            };
+            img.onerror = () => {
+              console.error('Erro ao carregar a imagem de fundo.');
+              reject(new Error('Falha ao carregar a imagem de fundo.'));
+            };
+          });
+        };
+
+        // Adicionar fundo antes de desenhar o conteúdo
+        await addBackgroundImage();
+
+        // Resetar para a primeira página para adicionar o conteúdo
+        doc.setPage(1);
+
+        // Definir fundo branco semi-transparente para o conteúdo
+        doc.setFillColor(255, 255, 255, 0.9); // Branco com 90% de opacidade
+        doc.rect(10, 10, pageWidth - 20, pageHeight - 20, 'F');
 
         // Título
         doc.setFont('helvetica', 'bold');
@@ -549,8 +582,6 @@
           doc.text(line, pageWidth / 2, y, { align: 'center' });
           y += 8;
         });
-        // Logo GML como PNG com tamanho reduzido
-        // doc.addImage('https://arildomello.github.io/propriospublicos/assets/img/gm.png', 'PNG', pageWidth / 2 - 15, y + 2, 15, 15);
 
         // Data de emissão
         y += 12;
@@ -596,6 +627,15 @@
             0: { cellWidth: usableWidth * 0.65 }, // 65% do espaço (~117mm)
             1: { cellWidth: usableWidth * 0.175, halign: 'right' }, // 17.5% (~31.5mm)
             2: { cellWidth: usableWidth * 0.175, halign: 'right' }  // 17.5% (~31.5mm)
+          },
+          didDrawPage: () => {
+            // Adicionar imagem de fundo em novas páginas criadas pela tabela
+            if (doc.internal.getCurrentPageInfo().pageNumber > 1) {
+              doc.addImage('https://arildomello.github.io/propriospublicos/assets/img/fundo.jpg', 'JPEG', 0, 0, pageWidth, pageHeight);
+              // Reaplicar fundo branco semi-transparente
+              doc.setFillColor(255, 255, 255, 0.9);
+              doc.rect(10, 10, pageWidth - 20, pageHeight - 20, 'F');
+            }
           }
         });
 
