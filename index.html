@@ -35,7 +35,6 @@
       filter:saturate(1.1);
     }
     .hidden{display:none}
-
     /* ======= LAYOUT ======= */
     .app{min-height:100vh; display:flex;}
     #sidebar{
@@ -53,7 +52,6 @@
     .sb-head{border-bottom:1px solid var(--brd)}
     .dot{width:10px; height:10px; border-radius:50%; background:linear-gradient(90deg,var(--grad-a),var(--grad-b)); box-shadow:var(--glow)}
     #menuBtn{background:transparent; border:1px solid rgba(120,160,255,.25); color:var(--text); border-radius:10px; padding:8px 10px; cursor:pointer}
-
     .nav{display:flex; flex-direction:column; gap:6px; margin-top:8px}
     .nav a{
       position:relative; overflow:hidden; transform:translateZ(0);
@@ -66,22 +64,18 @@
     .nav a:hover .ico{ transform:translateY(-1px); filter:drop-shadow(0 0 6px rgba(0,230,255,.5)); }
     .nav a .label{white-space:nowrap; opacity:1; transform:translateX(0); transition: opacity .22s var(--ease), transform .22s var(--ease);}
     .nav a.active{background:linear-gradient(135deg, rgba(0,230,255,.25), rgba(47,123,255,.25)); border-color:rgba(130,180,255,.45); box-shadow:0 0 18px rgba(0,230,255,.18);}
-
     .app.collapsed #sidebar{ width:var(--sb-wc); }
     .app.collapsed .nav a .label{ opacity:0; transform:translateX(-6px); pointer-events:none; }
-
     @keyframes glowPulse{
       0%,100%{ box-shadow:0 0 0 rgba(0,230,255,0); }
-      50%    { box-shadow:0 0 24px rgba(0,230,255,.35); }
+      50% { box-shadow:0 0 24px rgba(0,230,255,.35); }
     }
     .sidebar-opening #sidebar{ animation:glowPulse .6s ease 1; }
-
     @keyframes labelSlideIn{
       from{ opacity:0; transform:translateX(-8px); }
-      to  { opacity:1; transform:translateX(0); }
+      to { opacity:1; transform:translateX(0); }
     }
     .sidebar-opening .nav a .label{ animation:labelSlideIn .25s var(--ease) both; }
-
     .nav a::after{
       content:"";
       position:absolute; inset:auto auto 0 0;
@@ -95,7 +89,6 @@
       transform:translate(var(--rx,0), var(--ry,0)) scale(1);
       transition:transform .45s var(--ease), opacity .45s var(--ease);
     }
-
     .content{flex:1; padding:22px; min-width:0}
     .container{
       max-width:1200px; margin:0 auto; background:linear-gradient(180deg,var(--glass), rgba(10,12,30,.45));
@@ -118,7 +111,6 @@
       margin-left: 20px;
     }
     .subtitle{color:var(--muted); font-weight:700}
-
     .cards{display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:16px; margin-bottom:14px}
     .card{background:linear-gradient(135deg, rgba(0,230,255,.9), rgba(47,123,255,.9)); color:#fff; padding:18px; border-radius:18px; text-align:center}
     .card h3{font-size:2rem; margin:0 0 4px}
@@ -136,7 +128,6 @@
     .tool{background:rgba(16,22,60,.6); border:1px solid rgba(120,160,255,.22); padding:10px 12px; border-radius:12px; display:flex; align-items:center; gap:8px}
     .tool input[type=search]{background:transparent; border:none; outline:none; color:#e9f3ff; width:100%}
     .footer{margin-top:14px; display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end}
-
     #gerarPDF {
       margin-left: auto;
       background: linear-gradient(135deg, var(--grad-a), var(--grad-b));
@@ -150,7 +141,6 @@
     #gerarPDF:hover {
       box-shadow: var(--glow);
     }
-
     #fabMenu{
       position:fixed; bottom:18px; right:18px; z-index:40; width:52px;height:52px; border-radius:50%;
       border:1px solid rgba(120,170,255,.35); background:linear-gradient(135deg, rgba(0,230,255,.9), rgba(47,123,255,.9));
@@ -160,7 +150,6 @@
       position:fixed; inset:0; background:rgba(0,0,0,.45); backdrop-filter:saturate(1.1) blur(2px);
       z-index:30; display:none
     }
-
     @media (max-width:1024px){
       #fabMenu{display:block}
       #sidebar{position:fixed; left:0; top:0; bottom:0; transform:translateX(-110%); }
@@ -176,7 +165,6 @@
 <body data-page="home">
   <button id="fabMenu" aria-label="Abrir menu" title="Abrir menu">☰</button>
   <div class="scrim" id="scrim"></div>
-
   <div class="app" id="app">
     <aside id="sidebar" aria-label="Menu lateral">
       <div class="sb-row sb-head">
@@ -190,7 +178,6 @@
         <a href="#" data-page="tipos" data-target="tipos-section"><span class="ico">📊</span><span class="label">Tipos de Atendimento</span></a>
       </nav>
     </aside>
-
     <main class="content" id="content" tabindex="-1">
       <section id="atendimentos-section">
         <div class="container">
@@ -198,28 +185,22 @@
             <h1>Atendimentos em 2025<img src="https://arildomello.github.io/propriospublicos/assets/img/Ico.ico" alt="Ícone GML" class="logo"></h1>
             <div class="subtitle">Resumo de atendimentos em Próprios Públicos por Secretarias, ocorrências e detidos, atualizado até 31/12/2025</div>
           </div>
-
           <div id="at-tools" class="toolbar hidden">
             <div class="tool">🔎 <input id="q" type="search" placeholder="Buscar por secretária ou local…" aria-label="Buscar" /></div>
             <div class="tool"><small id="metaInfo">0 linhas</small></div>
           </div>
-
           <div id="at-cards" class="cards hidden"></div>
-
           <section id="secretarias" class="panel hidden" aria-live="polite">
             <div class="panel-hd">📋 Secretarias</div>
             <div id="secList"></div>
           </section>
-
           <section id="detalhes" class="panel hidden">
             <div class="panel-hd"><button id="back" type="button">← Voltar</button> <span id="secTitle" style="font-weight:900;margin-left:8px"></span></div>
             <div id="detalheList"></div>
           </section>
-
           <div class="footer hidden" id="totals"></div>
         </div>
       </section>
-
       <section id="tipos-section" class="hidden">
         <div class="container">
           <div class="header">
@@ -235,7 +216,6 @@
       </section>
     </main>
   </div>
-
   <script>
     const app = document.getElementById('app');
     const menuBtn = document.getElementById('menuBtn');
@@ -243,12 +223,9 @@
     const scrim = document.getElementById('scrim');
     const nav = document.getElementById('nav');
     const mm = window.matchMedia('(max-width:1024px)');
-
     if (!mm.matches) app.classList.add('collapsed');
-
     function openDrawer(){ app.classList.add('drawer-open'); }
     function closeDrawer(){ app.classList.remove('drawer-open'); }
-
     function expandSidebarDesktop(expand){
       if (mm.matches) return;
       if (expand){
@@ -261,7 +238,6 @@
         setTimeout(()=> app.classList.remove('sidebar-opening'), 350);
       }
     }
-
     menuBtn?.addEventListener('click', ()=>{
       if (mm.matches){
         app.classList.contains('drawer-open') ? closeDrawer() : openDrawer();
@@ -272,7 +248,6 @@
     });
     fab?.addEventListener('click', openDrawer);
     scrim?.addEventListener('click', closeDrawer);
-
     mm.addEventListener('change', (ev)=>{
       if (ev.matches){
         app.classList.remove('collapsed');
@@ -282,7 +257,6 @@
         app.classList.add('collapsed');
       }
     });
-
     nav.addEventListener('click', (e)=>{
       const a = e.target.closest('a'); if(!a) return;
       const rect = a.getBoundingClientRect();
@@ -293,34 +267,28 @@
       a.classList.add('rippling');
       setTimeout(()=> a.classList.remove('rippling'), 460);
     });
-
     const loaded = { atendimentos:false, tipos:false };
     nav.addEventListener('click', (e)=>{
       const a = e.target.closest('a'); if(!a) return;
       const targetId = a.getAttribute('data-target'); if(!a) return;
-
       e.preventDefault();
       document.querySelectorAll('main > section').forEach(s=> s.classList.add('hidden'));
       document.getElementById(targetId).classList.remove('hidden');
-
       nav.querySelectorAll('a').forEach(x=> x.classList.remove('active'));
       a.classList.add('active');
-
       if (mm.matches) closeDrawer();
-
       if(targetId==='tipos-section' && !loaded.tipos) fetchTipos?.();
       if(targetId==='atendimentos-section' && !loaded.atendimentos) fetchAtendimentos?.();
     });
-
     const $ = (sel) => document.querySelector(sel);
     const el = (tag, cls) => { const x = document.createElement(tag); if (cls) x.className = cls; return x; };
     const numberize = (v) => { if (v==null) return 0; const s=String(v).replace(/\./g,'').replace(/,/g,'.').replace(/[^0-9.-]/g,'').trim(); const n=s===''?0:Number(s); return Number.isFinite(n)?n:0; };
     const csvUrl = (sheetId, gid) => `https://corsproxy.io/?${encodeURIComponent(`https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`)}`;
     const createCard = (val,label) => { const c=el('div','card'); c.innerHTML=`<h3>${val}</h3><p>${label}</p>`; return c; }
     const makePill = (label,val) => { const d=el('div','pill'); d.innerHTML=`${label}<br><b>${val}</b>`; return d; }
-
-    const SHEET_AT = '1aDCHjlCjq2UJ34DupeLTk_wwuK6vu14E';
+    const SHEET_AT = '1plIRxPGmi9xRa-_47e44CXX17BevhcR4onLxu08pwnk';
     const GID_AT = '1768351071';
+    const GID_TP = '764715934';
     let dataAT=[], grouped={};
     function normalizeAT(rows){
       const header = rows[0].map(x=>String(x||'').toLowerCase());
@@ -329,13 +297,13 @@
       dataAT = rows.map(cols=>{
         const c=[...cols]; while(c.length<7) c.push('');
         const [codPro,nome,tipoArea,secretaria,regiao,totalOcorrencias,detidos]=c.slice(0,7);
-        return { 
-          codPro:String(codPro||'').trim(), 
-          nome:String(nome||'').trim(), 
-          tipoArea:String(tipoArea||'').trim(), 
-          secretaria:String(secretaria||'').trim(), 
-          regiao:String(regiao||'').trim(), 
-          totalOcorrencias:numberize(totalOcorrencias), 
+        return {
+          codPro:String(codPro||'').trim(),
+          nome:String(nome||'').trim(),
+          tipoArea:String(tipoArea||'').trim(),
+          secretaria:String(secretaria||'').trim(),
+          regiao:String(regiao||'').trim(),
+          totalOcorrencias:numberize(totalOcorrencias),
           detidos:numberize(detidos)
         }
       }).filter(x=>x.secretaria && x.totalOcorrencias > 0);
@@ -345,9 +313,9 @@
       for(const r of dataAT){
         const g = grouped[r.secretaria] || (grouped[r.secretaria]={detalhes:{}, totalOcorrencias:0, totalDetidos:0, quantidadeSecretarias:0});
         const key = `${r.codPro}|${r.nome}`;
-        if(!g.detalhes[key]){ 
-          g.detalhes[key]={codPro:r.codPro, nome:r.nome, totalOcorrencias:0, detidos:0}; 
-          g.quantidadeSecretarias++; 
+        if(!g.detalhes[key]){
+          g.detalhes[key]={codPro:r.codPro, nome:r.nome, totalOcorrencias:0, detidos:0};
+          g.quantidadeSecretarias++;
         }
         g.detalhes[key].totalOcorrencias+=r.totalOcorrencias;
         g.detalhes[key].detidos+=r.detidos;
@@ -376,7 +344,6 @@
           return matchSec || matchNome;
         })
         .sort(([,a],[,b])=> b.totalOcorrencias - a.totalOcorrencias);
-
       for(const [sec,g] of entries){
         const row=el('div','row'); row.role='button';
         const left=el('div'); const name=el('div','name'); name.textContent=sec; left.appendChild(name);
@@ -402,7 +369,7 @@
       const entries=Object.entries(g.detalhes).sort(([,a],[,b])=> b.totalOcorrencias - a.totalOcorrencias);
       for(const [,d] of entries){
         const row=el('div','row'); row.role='button';
-        const left=el('div'); 
+        const left=el('div');
         const name=el('div','name'); name.textContent=d.nome; left.appendChild(name);
         const sub=el('div','muted'); sub.textContent=`Cód. Pró.: ${d.codPro}`; left.appendChild(sub);
         const stats=el('div','stats');
@@ -416,7 +383,6 @@
     function backToSecretarias(){ $('#detalhes').classList.add('hidden'); $('#secretarias').classList.remove('hidden'); }
     $('#back').addEventListener('click', backToSecretarias);
     $('#q').addEventListener('input', e => renderSecretarias(e.target.value));
-
     async function fetchAtendimentos(){
       try{
         const response = await fetch(csvUrl(SHEET_AT, GID_AT));
@@ -426,13 +392,11 @@
                       .filter(r=> Array.isArray(r) && r.some(c=> String(c).trim()!=='') );
         normalizeAT(rows); if(!dataAT.length){ alert('CSV de Atendimentos sem dados válidos.'); return; }
         aggregateAT(); renderAT(); loaded.atendimentos = true;
-      }catch(e){ 
-        console.error('Erro ao carregar Atendimentos:', e); 
-        alert('Erro ao carregar Atendimentos. Verifique se a planilha está pública.'); 
+      }catch(e){
+        console.error('Erro ao carregar Atendimentos:', e);
+        alert('Erro ao carregar Atendimentos. Verifique se a planilha está pública.');
       }
     }
-
-    const GID_TP = '764715934';
     let dataTP=[], groupedTP={};
     function normalizeTP(rows){
       const header = rows[0].map(x=>String(x||'').toLowerCase());
@@ -441,11 +405,11 @@
       dataTP = rows.map(cols=>{
         const c=[...cols]; while(c.length<5) c.push('');
         const [codPro,nome,tipoCrime,quantidade,detidos]=c.slice(0,5);
-        return { 
-          codPro:String(codPro||'').trim(), 
-          nome:String(nome||'').trim(), 
-          tipoCrime:String(tipoCrime||'').trim(), 
-          quantidade:numberize(quantidade), 
+        return {
+          codPro:String(codPro||'').trim(),
+          nome:String(nome||'').trim(),
+          tipoCrime:String(tipoCrime||'').trim(),
+          quantidade:numberize(quantidade),
           detidos:numberize(detidos)
         }
       }).filter(x=>x.codPro && x.tipoCrime);
@@ -454,9 +418,9 @@
       groupedTP={};
       for(const r of dataTP){
         const g = groupedTP[r.codPro] || (groupedTP[r.codPro]={nome:r.nome, crimes:{}, totalQuantidade:0, totalDetidos:0, quantidadeCrimes:0});
-        if(!g.crimes[r.tipoCrime]){ 
-          g.crimes[r.tipoCrime]={quantidade:0, detidos:0}; 
-          g.quantidadeCrimes++; 
+        if(!g.crimes[r.tipoCrime]){
+          g.crimes[r.tipoCrime]={quantidade:0, detidos:0};
+          g.quantidadeCrimes++;
         }
         g.crimes[r.tipoCrime].quantidade+=r.quantidade;
         g.crimes[r.tipoCrime].detidos+=r.detidos;
@@ -478,8 +442,8 @@
       const list=$('#tp-list'); list.innerHTML='';
       locais.sort((a,b)=> groupedTP[b].totalQuantidade - groupedTP[a].totalQuantidade).forEach(codPro=>{
         const g=groupedTP[codPro];
-        const row=el('div','row'); 
-        const left=el('div'); 
+        const row=el('div','row');
+        const left=el('div');
         const name=el('div','name'); name.textContent=`${g.nome} (${codPro})`; left.appendChild(name);
         const stats=el('div','stats');
         stats.append(
@@ -489,7 +453,7 @@
         );
         row.append(left,stats); list.append(row);
         Object.entries(g.crimes).sort(([,a],[,b])=> b.quantidade - a.quantidade).forEach(([tipo,d])=>{
-          const subRow=el('div','row'); 
+          const subRow=el('div','row');
           const subLeft=el('div'); subLeft.style.paddingLeft='20px';
           const subName=el('div','name'); subName.textContent=tipo; subLeft.appendChild(subName);
           const subStats=el('div','stats');
@@ -501,7 +465,7 @@
         });
       });
       const t=el('div','row'); const left=el('div'); const name=el('div','name'); name.textContent='📊 TOTAL GERAL'; left.appendChild(name);
-      const stats=el('div','stats'); 
+      const stats=el('div','stats');
       stats.append(
         makePill('Quantidade', totals.qtd),
         makePill('Detidos', totals.det)
@@ -521,14 +485,12 @@
         const totalQuant = g.totalQuantidade;
         const totalDet = g.totalDetidos;
         const date = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF({
           orientation: 'portrait',
           unit: 'mm',
           format: 'a4'
         });
-
         // Definir margens e dimensões da página
         const pageWidth = doc.internal.pageSize.getWidth(); // 210mm
         const pageHeight = doc.internal.pageSize.getHeight(); // 297mm
@@ -538,7 +500,6 @@
         const headerHeight = 25; // Altura do cabeçalho
         const tableStartY = 40; // Posição de início da tabela
         const tableEndY = pageHeight - 20; // Posição de fim da tabela (deixando margem inferior)
-
         // Converte imagem URL em Base64
         const toBase64 = (url) => {
           return fetch(url)
@@ -549,18 +510,15 @@
               reader.readAsDataURL(blob);
             }));
         };
-
         // Carregar as imagens do logo como base64
         const logoBase64Right = await toBase64('https://arildomello.github.io/propriospublicos/assets/img/gm.png');
         const logoBase64Left = await toBase64('https://arildomello.github.io/propriospublicos/assets/img/londrina.png');
-
         // Função para adicionar cabeçalho em todas as páginas
         const addHeader = () => {
           // Logo no canto superior esquerdo
           doc.addImage(logoBase64Left, 'PNG', marginLeft, 5, 20, 20);
           // Logo no canto superior direito
           doc.addImage(logoBase64Right, 'PNG', pageWidth - 25, 5, 20, 20);
-
           // Título com quebras de linha
           const titleLines = [
             'PREFEITURA DO MUNICÍPIO DE LONDRINA',
@@ -576,17 +534,14 @@
             doc.text(line, pageWidth / 2, startY + (index * lineHeight), { align: 'center' });
           });
         };
-
         // Adicionar cabeçalho à primeira página
         addHeader();
-
         // Adicionar data de emissão e nome do próprio público (apenas na primeira página)
         let y = headerHeight + 5;
         doc.setFontSize(10);
         doc.text(`\nData de emissão: ${date}`, marginLeft, y);
         y += 5;
         doc.text(`\nNome do Próprio Público: ${nome} (Cód. Pró.: ${codPro})`, marginLeft, y);
-
         // Adicionar tabela com posições definidas
         doc.autoTable({
           startY: tableStartY, // Início da tabela em 40mm
@@ -597,24 +552,24 @@
           body: crimes,
           foot: [['Total Geral', totalQuant, totalDet]],
           theme: 'grid',
-          headStyles: { 
+          headStyles: {
             fillColor: [41, 128, 185],
             textColor: [255, 255, 255],
             fontStyle: 'bold',
             fontSize: 11
           },
-          bodyStyles: { 
+          bodyStyles: {
             fontSize: 10,
             overflow: 'linebreak'
           },
-          footStyles: { 
+          footStyles: {
             fillColor: [200, 200, 200],
             textColor: [0, 0, 0],
             fontStyle: 'bold',
             fontSize: 11
           },
-          styles: { 
-            font: 'helvetica', 
+          styles: {
+            font: 'helvetica',
             cellPadding: 2,
             minCellHeight: 6
           },
@@ -632,7 +587,6 @@
             }
           }
         });
-
         doc.save(`Relatorio_${codPro}_${date.replace(/\//g, '-')}.pdf`);
       } catch (e) {
         console.error('Erro ao gerar PDF:', e);
@@ -646,12 +600,12 @@
         const text = await response.text();
         const rows = Papa.parse(text, { delimiter:',', skipEmptyLines:'greedy' }).data
                       .filter(r=> Array.isArray(r) && r.some(c=> String(c).trim()!=='') );
-        normalizeTP(rows); 
+        normalizeTP(rows);
         if(!dataTP.length){ alert('CSV de Tipos de Atendimento sem dados válidos.'); return; }
         if(codProFilter){
           dataTP = dataTP.filter(x=> x.codPro===codProFilter);
         }
-        aggregateTP(); 
+        aggregateTP();
         document.querySelectorAll('main > section').forEach(s=> s.classList.add('hidden'));
         $('#tipos-section').classList.remove('hidden');
         nav.querySelectorAll('a').forEach(x=> x.classList.remove('active'));
@@ -669,14 +623,13 @@
           }
         } else {
           if (btn) btn.remove();
-        } 
+        }
         loaded.tipos = true;
-      }catch(e){ 
-        console.error('Erro ao carregar Tipos de Atendimento:', e); 
-        alert('Erro ao carregar Tipos de Atendimento. Verifique se a planilha está pública.'); 
+      }catch(e){
+        console.error('Erro ao carregar Tipos de Atendimento:', e);
+        alert('Erro ao carregar Tipos de Atendimento. Verifique se a planilha está pública.');
       }
     }
-
     window.addEventListener('load', ()=>{
       document.getElementById('atendimentos-section').classList.remove('hidden');
       fetchAtendimentos();
