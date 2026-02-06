@@ -1,638 +1,316 @@
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<link rel="icon" type="image/x-icon" href="https://arildomello.github.io/propriospublicos/assets/img/Ico.ico" />
-<title>GML - 2025 - Atendimentos em Próprios Públicos</title>
-<!-- Parser de CSV -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-<!-- jsPDF e AutoTable para geração de PDF -->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GML - 2025 - Atendimentos</title>
+<link rel="icon" href="https://arildomello.github.io/propriospublicos/assets/img/Ico.ico">
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.3/jspdf.plugin.autotable.min.js"></script>
+
 <style>
-/* ======= THEME (Neon Azul) ======= */
-*{box-sizing:border-box}
-:root{
---bg1:#07051a; --bg2:#0f0b2d; --bg3:#14123b;
---text:#eaf1ff; --muted:rgba(202,214,255,.78);
---grad-a:#00e6ff; --grad-b:#2f7bff; --grad-c:#7c4dff;
---brd: rgba(120,160,255,.22); --glow:0 0 14px rgba(0,230,255,.45);
---glass: rgba(18,25,61,.55); --shadow: 0 25px 50px rgba(0,0,0,.35);
---sb-w:260px; --sb-wc:72px; --ease:cubic-bezier(.2,.8,.2,1);
-}
-html,body{height:100%}
-body{
-margin:0; color:var(--text); font-family:'Inter','Segoe UI',system-ui,Arial,sans-serif;
-background:linear-gradient(135deg,var(--bg1),var(--bg2) 50%,var(--bg3));
-}
-body::before{
-content:""; position:fixed; inset:0; z-index:-1; pointer-events:none;
-background:
-radial-gradient(60rem 60rem at 20% 50%, rgba(0,230,255,.16) 0%, transparent 55%),
-radial-gradient(42rem 42rem at 80% 20%, rgba(124,77,255,.14) 0%, transparent 60%),
-radial-gradient(40rem 40rem at 40% 80%, rgba(47,123,255,.12) 0%, transparent 60%);
-filter:saturate(1.1);
-}
+body{margin:0;font-family:Arial;background:#07051a;color:#fff}
 .hidden{display:none}
-/* ======= LAYOUT ======= */
-.app{min-height:100vh; display:flex;}
-#sidebar{
-position:sticky; top:0; align-self:flex-start;
-width:var(--sb-w); height:100dvh;
-background:linear-gradient(180deg, var(--glass), rgba(10,12,30,.45));
-border-right:1px solid var(--brd); backdrop-filter: blur(14px);
-padding:14px 20px; z-index:20;
-transition:
-width .28s var(--ease),
-transform .25s var(--ease);
-will-change: width, transform;
-}
-.sb-row{display:flex; align-items:center; gap:10px; padding:8px 10px}
-.sb-head{border-bottom:1px solid var(--brd)}
-.dot{width:10px; height:10px; border-radius:50%; background:linear-gradient(90deg,var(--grad-a),var(--grad-b)); box-shadow:var(--glow)}
-#menuBtn{background:transparent; border:1px solid rgba(120,160,255,.25); color:var(--text); border-radius:10px; padding:8px 10px; cursor:pointer}
-.nav{display:flex; flex-direction:column; gap:6px; margin-top:8px}
-.nav a{
-position:relative; overflow:hidden; transform:translateZ(0);
-display:flex; align-items:center; gap:12px; padding:10px 12px;
-border-radius:12px; text-decoration:none; color:#eaf1ff;
-border:1px solid rgba(120,160,255,.15); background:rgba(16,22,60,.45);
-transition: background .22s var(--ease), border-color .22s var(--ease), box-shadow .22s var(--ease);
-}
-.nav a .ico{min-width:24px; text-align:center; transition: transform .22s var(--ease), filter .22s var(--ease);}
-.nav a:hover .ico{ transform:translateY(-1px); filter:drop-shadow(0 0 6px rgba(0,230,255,.5)); }
-.nav a .label{white-space:nowrap; opacity:1; transform:translateX(0); transition: opacity .22s var(--ease), transform .22s var(--ease);}
-.nav a.active{background:linear-gradient(135deg, rgba(0,230,255,.25), rgba(47,123,255,.25)); border-color:rgba(130,180,255,.45); box-shadow:0 0 18px rgba(0,230,255,.18);}
-.app.collapsed #sidebar{ width:var(--sb-wc); }
-.app.collapsed .nav a .label{ opacity:0; transform:translateX(-6px); pointer-events:none; }
-@keyframes glowPulse{
-0%,100%{ box-shadow:0 0 0 rgba(0,230,255,0); }
-50% { box-shadow:0 0 24px rgba(0,230,255,.35); }
-}
-.sidebar-opening #sidebar{ animation:glowPulse .6s ease 1; }
-@keyframes labelSlideIn{
-from{ opacity:0; transform:translateX(-8px); }
-to { opacity:1; transform:translateX(0); }
-}
-.sidebar-opening .nav a .label{ animation:labelSlideIn .25s var(--ease) both; }
-.nav a::after{
-content:"";
-position:absolute; inset:auto auto 0 0;
-width:0; height:0; border-radius:50%;
-background:radial-gradient(circle, rgba(0,230,255,.35), transparent 60%);
-transform:translate(var(--rx,0), var(--ry,0)) scale(0);
-opacity:0; pointer-events:none;
-}
-.nav a.rippling::after{
-width:220px; height:220px; opacity:1;
-transform:translate(var(--rx,0), var(--ry,0)) scale(1);
-transition:transform .45s var(--ease), opacity .45s var(--ease);
-}
-.content{flex:1; padding:22px; min-width:0}
-.container{
-max-width:1200px; margin:0 auto; background:linear-gradient(180deg,var(--glass), rgba(10,12,30,.45));
-border:1px solid rgba(120,160,255,.18); border-radius:24px; padding:24px; box-shadow:var(--shadow)
-}
-.header{text-align:center; margin-bottom:18px; position:relative}
-.header::before{
-content:""; position:absolute; top:-10px; left:50%; transform:translateX(-50%);
-width:260px; height:4px; border-radius:2px; background:linear-gradient(90deg,var(--grad-a),var(--grad-b),var(--grad-c)); box-shadow:var(--glow)
-}
-h1{
-font-size:clamp(1.8rem,1.2rem + 2.2vw,3rem); font-weight:900; letter-spacing:.3px; margin:6px 0;
-background:linear-gradient(135deg,var(--grad-a),var(--grad-b),var(--grad-c));
--webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent
-}
-.logo {
-width: 40px;
-height: auto;
-vertical-align: middle;
-margin-left: 20px;
-}
-.subtitle{color:var(--muted); font-weight:700}
-.cards{display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:16px; margin-bottom:14px}
-.card{background:linear-gradient(135deg, rgba(0,230,255,.9), rgba(47,123,255,.9)); color:#fff; padding:18px; border-radius:18px; text-align:center}
-.card h3{font-size:2rem; margin:0 0 4px}
-.panel{background:linear-gradient(180deg, rgba(14,18,48,.7), rgba(8,10,28,.6)); border:1px solid var(--brd); border-radius:18px; overflow:hidden; margin-top:12px}
-.panel-hd{background:linear-gradient(135deg,var(--grad-a),var(--grad-b)); padding:14px 16px; font-weight:900; display: flex; align-items: center; gap: 8px;}
-.row{display:flex; justify-content:space-between; align-items:center; gap:16px; padding:16px; border-top:1px solid rgba(130,160,255,.16)}
-.row:first-child{border-top:none}
-.row:hover{background:rgba(10,25,70,.35)}
-.stats{display:flex; gap:12px; flex-wrap:wrap}
-.pill{min-width:90px; text-align:center; padding:8px 10px; border-radius:10px; background:rgba(10,25,70,.55); border:1px solid rgba(120,170,255,.25)}
-.pill b{font-size:1.1rem; color:#00e6ff; text-shadow:0 0 10px rgba(0,230,255,.35)}
-.name{font-weight:900}
-.muted{color:var(--muted); font-weight:700; font-size:.95rem}
-.toolbar{display:flex; gap:12px; flex-wrap:wrap; margin:12px 0 18px; justify-content:center}
-.tool{background:rgba(16,22,60,.6); border:1px solid rgba(120,160,255,.22); padding:10px 12px; border-radius:12px; display:flex; align-items:center; gap:8px}
-.tool input[type=search]{background:transparent; border:none; outline:none; color:#e9f3ff; width:100%}
-.footer{margin-top:14px; display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end}
-#gerarPDF {
-margin-left: auto;
-background: linear-gradient(135deg, var(--grad-a), var(--grad-b));
-border: none;
-color: #fff;
-padding: 8px 12px;
-border-radius: 8px;
-cursor: pointer;
-font-weight: 700;
-}
-#gerarPDF:hover {
-box-shadow: var(--glow);
-}
-#fabMenu{
-position:fixed; bottom:18px; right:18px; z-index:40; width:52px;height:52px; border-radius:50%;
-border:1px solid rgba(120,170,255,.35); background:linear-gradient(135deg, rgba(0,230,255,.9), rgba(47,123,255,.9));
-color:#fff; font-weight:900; cursor:pointer; box-shadow:0 8px 24px rgba(0,0,0,.35); display:none
-}
-.scrim{
-position:fixed; inset:0; background:rgba(0,0,0,.45); backdrop-filter:saturate(1.1) blur(2px);
-z-index:30; display:none
-}
-@media (max-width:1024px){
-#fabMenu{display:block}
-#sidebar{position:fixed; left:0; top:0; bottom:0; transform:translateX(-110%); }
-.app.drawer-open #sidebar{ transform:translateX(0); }
-.app.drawer-open .scrim{ display:block; }
-}
-@media (max-width:720px){
-.row{flex-direction:column; align-items:flex-start}
-.stats{width:100%; justify-content:space-between}
-}
+.container{max-width:1200px;margin:auto;padding:20px}
+h1{text-align:center}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+.card{background:#2f7bff;padding:15px;border-radius:10px;text-align:center}
+.panel{background:#14123b;padding:15px;border-radius:10px;margin-top:15px}
+.row{display:grid;grid-template-columns:1fr 120px 120px;padding:10px;border-bottom:1px solid #333;cursor:pointer;align-items:center}
+.row.header{font-weight:bold;background:#1d1a50}
+.row:hover{background:#1d1a50}
+button{padding:6px 10px;border:none;border-radius:6px;cursor:pointer}
+.header{display:flex;justify-content:space-between;align-items:center}
 </style>
 </head>
-<body data-page="home">
-<button id="fabMenu" aria-label="Abrir menu" title="Abrir menu">☰</button>
-<div class="scrim" id="scrim"></div>
-<div class="app" id="app">
-<aside id="sidebar" aria-label="Menu lateral">
-<div class="sb-row sb-head">
-<span class="dot" aria-hidden="true"></span>
-<button id="menuBtn" aria-expanded="false" aria-controls="sidebar" title="Menu">
-☰ <span class="label">Menu</span>
-</button>
-</div>
-<nav class="nav" id="nav">
-<a href="#" data-page="home" data-target="atendimentos-section" class="active"><span class="ico">📋</span><span class="label">Atendimentos</span></a>
-<a href="#" data-page="tipos" data-target="tipos-section"><span class="ico">📊</span><span class="label">Tipos de Atendimento</span></a>
-</nav>
-</aside>
-<main class="content" id="content" tabindex="-1">
-<section id="atendimentos-section">
+<body>
+
 <div class="container">
+<h1>Atendimentos 2025</h1>
+<div id="status">Carregando...</div>
+
+<!-- SECRETARIAS -->
+<section id="secSecretarias">
+<h2>Secretarias</h2>
+<div id="cardsSec" class="cards"></div>
+<div id="listaSec" class="panel"></div>
+</section>
+
+<!-- PROPRIOS -->
+<section id="secProprios" class="hidden">
 <div class="header">
-<h1>Atendimentos em 2025<img src="https://arildomello.github.io/propriospublicos/assets/img/Ico.ico" alt="Ícone GML" class="logo"></h1>
-<div class="subtitle">Resumo de atendimentos em Próprios Públicos por Secretarias, ocorrências e detidos, atualizado até 31/12/2025</div>
+<h2 id="tituloProprios"></h2>
+<button onclick="voltarSecretarias()">← Voltar</button>
 </div>
-<div id="at-tools" class="toolbar hidden">
-<div class="tool">🔎 <input id="q" type="search" placeholder="Buscar por secretária ou local…" aria-label="Buscar" /></div>
-<div class="tool"><small id="metaInfo">0 linhas</small></div>
-</div>
-<div id="at-cards" class="cards hidden"></div>
-<section id="secretarias" class="panel hidden" aria-live="polite">
-<div class="panel-hd">📋 Secretarias</div>
-<div id="secList"></div>
+<div id="listaProprios" class="panel"></div>
 </section>
-<section id="detalhes" class="panel hidden">
-<div class="panel-hd"><button id="back" type="button">← Voltar</button> <span id="secTitle" style="font-weight:900;margin-left:8px"></span></div>
-<div id="detalheList"></div>
-</section>
-<div class="footer hidden" id="totals"></div>
-</div>
-</section>
-<section id="tipos-section" class="hidden">
-<div class="container">
+
+<!-- CRIMES -->
+<section id="secCrimes" class="hidden">
 <div class="header">
-<h1>Tipos de Atendimento<img src="https://arildomello.github.io/propriospublicos/assets/img/Ico.ico" alt="Ícone GML" class="logo"></h1>
-<div class="subtitle">Resumo por local, tipo de crime, quantidade e detidos</div>
+<h2 id="tituloCrimes"></h2>
+<div>
+<button onclick="voltarProprios()">← Voltar</button>
+<button onclick="gerarPDF()">PDF</button>
 </div>
-<div id="tp-cards" class="cards hidden"></div>
-<section id="tp-panel" class="panel hidden">
-<div class="panel-hd">📊 Tipos de Atendimento</div>
-<div id="tp-list"></div>
+</div>
+<div id="listaCrimes" class="panel"></div>
 </section>
+
 </div>
-</section>
-</main>
-</div>
+
 <script>
-const app = document.getElementById('app');
-const menuBtn = document.getElementById('menuBtn');
-const fab = document.getElementById('fabMenu');
-const scrim = document.getElementById('scrim');
-const nav = document.getElementById('nav');
-const mm = window.matchMedia('(max-width:1024px)');
-if (!mm.matches) app.classList.add('collapsed');
-function openDrawer(){ app.classList.add('drawer-open'); }
-function closeDrawer(){ app.classList.remove('drawer-open'); }
-function expandSidebarDesktop(expand){
-if (mm.matches) return;
-if (expand){
-app.classList.add('sidebar-opening');
-app.classList.remove('collapsed');
-setTimeout(()=> app.classList.remove('sidebar-opening'), 350);
-} else {
-app.classList.add('sidebar-opening');
-app.classList.add('collapsed');
-setTimeout(()=> app.classList.remove('sidebar-opening'), 350);
+/******** CONFIG ********/
+const SHEET_ID='1plIRxPGmi9xRa-_47e44CXX17BevhcR4onLxu08pwnk';
+
+const GID_AT='1768351071';
+const GID_TP='764715934';
+
+const URL_AT=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?gid=${GID_AT}&tqx=responseHandler:cbAt`;
+const URL_TP=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?gid=${GID_TP}&tqx=responseHandler:cbTp`;
+
+/******** STATE ********/
+const state={secretaria:null,codPro:null,nomePro:null};
+
+let dadosAt=[];
+let dadosTp=[];
+
+/******** DOM ********/
+const statusBox=document.getElementById('status');
+
+const secSecretarias=document.getElementById('secSecretarias');
+const secProprios=document.getElementById('secProprios');
+const secCrimes=document.getElementById('secCrimes');
+
+const cardsSec=document.getElementById('cardsSec');
+const listaSec=document.getElementById('listaSec');
+const listaProprios=document.getElementById('listaProprios');
+const listaCrimes=document.getElementById('listaCrimes');
+
+const tituloProprios=document.getElementById('tituloProprios');
+const tituloCrimes=document.getElementById('tituloCrimes');
+
+/******** UTIL ********/
+function num(v){return Number(String(v||'').replace(',','.'))||0}
+function status(t){statusBox.innerText=t}
+
+function load(url){
+ return new Promise((ok,err)=>{
+  const s=document.createElement('script');
+  s.src=url;
+  s.onload=ok;
+  s.onerror=err;
+  document.body.appendChild(s);
+ });
 }
+
+function row(a,b,c){
+ const r=document.createElement('div');
+ r.className='row';
+ r.innerHTML=`<div>${a}</div><div>${b}</div><div>${c}</div>`;
+ return r;
 }
-menuBtn?.addEventListener('click', ()=>{
-if (mm.matches){
-app.classList.contains('drawer-open') ? closeDrawer() : openDrawer();
-} else {
-const isCollapsed = app.classList.contains('collapsed');
-expandSidebarDesktop(isCollapsed);
+
+function headerRow(){
+ const r=document.createElement('div');
+ r.className='row header';
+ r.innerHTML='<div>Descrição</div><div>Ocorrências</div><div>Detidos</div>';
+ return r;
 }
-});
-fab?.addEventListener('click', openDrawer);
-scrim?.addEventListener('click', closeDrawer);
-mm.addEventListener('change', (ev)=>{
-if (ev.matches){
-app.classList.remove('collapsed');
-closeDrawer();
-} else {
-app.classList.remove('drawer-open');
-app.classList.add('collapsed');
+
+function card(v,t){
+ const d=document.createElement('div');
+ d.className='card';
+ d.innerHTML=`<h2>${v}</h2><p>${t}</p>`;
+ return d;
 }
-});
-nav.addEventListener('click', (e)=>{
-const a = e.target.closest('a'); if(!a) return;
-const rect = a.getBoundingClientRect();
-const rx = (e.clientX - rect.left) - 110;
-const ry = (e.clientY - rect.top) - 110;
-a.style.setProperty('--rx', rx + 'px');
-a.style.setProperty('--ry', ry + 'px');
-a.classList.add('rippling');
-setTimeout(()=> a.classList.remove('rippling'), 460);
-});
-const loaded = { atendimentos:false, tipos:false };
-nav.addEventListener('click', (e)=>{
-const a = e.target.closest('a'); if(!a) return;
-const targetId = a.getAttribute('data-target'); if(!a) return;
-e.preventDefault();
-document.querySelectorAll('main > section').forEach(s=> s.classList.add('hidden'));
-document.getElementById(targetId).classList.remove('hidden');
-nav.querySelectorAll('a').forEach(x=> x.classList.remove('active'));
-a.classList.add('active');
-if (mm.matches) closeDrawer();
-if(targetId==='tipos-section' && !loaded.tipos) fetchTipos?.();
-if(targetId==='atendimentos-section' && !loaded.atendimentos) fetchAtendimentos?.();
-});
-const $ = (sel) => document.querySelector(sel);
-const el = (tag, cls) => { const x = document.createElement(tag); if (cls) x.className = cls; return x; };
-const numberize = (v) => { if (v==null) return 0; const s=String(v).replace(/\./g,'').replace(/,/g,'.').replace(/[^0-9.-]/g,'').trim(); const n=s===''?0:Number(s); return Number.isFinite(n)?n:0; };
-const csvUrl = (sheetId, gid) => `https://corsproxy.io/?${encodeURIComponent(`https://docs.google.com/spreadsheets/d/$$   {sheetId}/export?format=csv&gid=   $${gid}`)}`;
-const createCard = (val,label) => { const c=el('div','card'); c.innerHTML=`<h3>${val}</h3><p>${label}</p>`; return c; }
-const makePill = (label,val) => { const d=el('div','pill'); d.innerHTML=`${label}<br><b>${val}</b>`; return d; }
-const SHEET_AT = '1plIRxPGmi9xRa-_47e44CXX17BevhcR4onLxu08pwnk';
-const GID_AT = '1768351071';
-const GID_TP = '764715934';
-let dataAT=[], grouped={};
-function normalizeAT(rows){
-const header = rows[0].map(x=>String(x||'').toLowerCase());
-const hasHeader = ['cód. pró.','nome','tipo de área','secretaria','região','total ocorrências','detidos'].some(k => header.some(c=> c.includes(k)));
-if(hasHeader) rows = rows.slice(1);
-dataAT = rows.map(cols=>{
-const c=[...cols]; while(c.length<7) c.push('');
-const [codPro,nome,tipoArea,secretaria,regiao,totalOcorrencias,detidos]=c.slice(0,7);
-return {
-codPro:String(codPro||'').trim(),
-nome:String(nome||'').trim(),
-tipoArea:String(tipoArea||'').trim(),
-secretaria:String(secretaria||'').trim(),
-regiao:String(regiao||'').trim(),
-totalOcorrencias:numberize(totalOcorrencias),
-detidos:numberize(detidos)
+
+/******** ATENDIMENTOS ********/
+
+function cbAt(r){
+ const rows=r?.table?.rows||[];
+ if(!rows.length){status('Sem dados');return}
+
+ dadosAt=rows.map(x=>({
+  cod:x.c[0]?.v||'',
+  nome:x.c[1]?.v||'',
+  secretaria:x.c[3]?.v||'',
+  ocorr:num(x.c[5]?.v),
+  det:num(x.c[6]?.v)
+ })).filter(x=>x.secretaria);
+
+ renderSecretarias();
 }
-}).filter(x=>x.secretaria && x.totalOcorrencias > 0);
+
+function renderSecretarias(){
+ status('');
+ cardsSec.innerHTML='';
+ listaSec.innerHTML='';
+
+ const grupo={};
+
+ dadosAt.forEach(r=>{
+  if(!grupo[r.secretaria]) grupo[r.secretaria]={oc:0,dt:0,loc:[]};
+  grupo[r.secretaria].oc+=r.ocorr;
+  grupo[r.secretaria].dt+=r.det;
+  grupo[r.secretaria].loc.push(r);
+ });
+
+ const secs=Object.keys(grupo);
+ let to=0,td=0;
+
+ secs.forEach(s=>{to+=grupo[s].oc;td+=grupo[s].dt});
+
+ cardsSec.append(
+  card(secs.length,'Secretarias'),
+  card(to,'Ocorrências'),
+  card(td,'Detidos')
+ );
+
+ listaSec.append(headerRow());
+
+ secs.sort((a,b)=>grupo[b].oc-grupo[a].oc);
+
+ secs.forEach(s=>{
+  const g=grupo[s];
+  const r=row(s,g.oc,g.dt);
+  r.onclick=()=>abrirProprios(s,g.loc);
+  listaSec.append(r);
+ });
 }
-function aggregateAT(){
-grouped={};
-for(const r of dataAT){
-const g = grouped[r.secretaria] || (grouped[r.secretaria]={detalhes:{}, totalOcorrencias:0, totalDetidos:0, quantidadeSecretarias:0});
-const key = `${r.codPro}|${r.nome}`;
-if(!g.detalhes[key]){
-g.detalhes[key]={codPro:r.codPro, nome:r.nome, totalOcorrencias:0, detidos:0};
-g.quantidadeSecretarias++;
+
+/******** PROPRIOS ********/
+
+function abrirProprios(sec,lista){
+ state.secretaria=sec;
+
+ secSecretarias.classList.add('hidden');
+ secProprios.classList.remove('hidden');
+
+ tituloProprios.innerText=sec;
+ listaProprios.innerHTML='';
+ listaProprios.append(headerRow());
+
+ const grupo={};
+
+ lista.forEach(r=>{
+  if(!grupo[r.cod]) grupo[r.cod]={nome:r.nome,oc:0,dt:0};
+  grupo[r.cod].oc+=r.ocorr;
+  grupo[r.cod].dt+=r.det;
+ });
+
+ Object.entries(grupo)
+ .sort(([,a],[,b])=>b.oc-a.oc)
+ .forEach(([cod,g])=>{
+  const r=row(`${g.nome} (${cod})`,g.oc,g.dt);
+  r.onclick=()=>abrirCrimes(cod,g.nome);
+  listaProprios.append(r);
+ });
 }
-g.detalhes[key].totalOcorrencias+=r.totalOcorrencias;
-g.detalhes[key].detidos+=r.detidos;
-g.totalOcorrencias+=r.totalOcorrencias;
-g.totalDetidos+=r.detidos;
+
+function voltarSecretarias(){
+ secProprios.classList.add('hidden');
+ secSecretarias.classList.remove('hidden');
 }
+
+/******** TIPOS ********/
+
+function cbTp(r){
+ const rows=r?.table?.rows||[];
+ if(!rows.length) return;
+
+ dadosTp=rows.map(x=>({
+  cod:x.c[0]?.v||'',
+  nome:x.c[1]?.v||'',
+  tipo:x.c[2]?.v||'',
+  q:num(x.c[3]?.v),
+  d:num(x.c[4]?.v)
+ })).filter(x=>x.cod&&x.tipo);
 }
-function renderAT(){
-const secretarias=Object.keys(grouped);
-const totals=secretarias.reduce((a,k)=>{const g=grouped[k]; a.oc+=g.totalOcorrencias; a.det+=g.totalDetidos; a.sec+=g.quantidadeSecretarias; return a;},{oc:0,det:0,sec:0});
-const wrap=$('#at-cards'); wrap.innerHTML='';
-wrap.append(createCard(secretarias.length,'Total de Secretarias'), createCard(totals.oc,'Total de Ocorrências'), createCard(totals.det,'Total de Detidos'));
-wrap.classList.remove('hidden'); $('#at-tools').classList.remove('hidden'); $('#secretarias').classList.remove('hidden'); $('#totals').classList.remove('hidden');
-$('#metaInfo').textContent = `${dataAT.length} linhas | ${secretarias.length} secretarias`;
-renderSecretarias('');
+
+/******** CRIMES ********/
+
+function abrirCrimes(cod,nome){
+ state.codPro=cod;
+ state.nomePro=nome;
+
+ secProprios.classList.add('hidden');
+ secCrimes.classList.remove('hidden');
+
+ tituloCrimes.innerText=`${nome} (${cod})`;
+ listaCrimes.innerHTML='';
+ listaCrimes.append(headerRow());
+
+ const lista=dadosTp.filter(x=>x.cod==cod);
+
+ const grupo={};
+
+ lista.forEach(r=>{
+  if(!grupo[r.tipo]) grupo[r.tipo]={q:0,d:0};
+  grupo[r.tipo].q+=r.q;
+  grupo[r.tipo].d+=r.d;
+ });
+
+ Object.entries(grupo)
+ .sort(([,a],[,b])=>b.q-a.q)
+ .forEach(([t,g])=>{
+  listaCrimes.append(row(t,g.q,g.d));
+ });
 }
-function makePillAT(label,val){ return makePill(label,val); }
-function renderSecretarias(filter=""){
-const list=$('#secList'); list.innerHTML='';
-const q=(filter||'').toLowerCase().trim();
-const entries = Object.entries(grouped)
-.filter(([sec,g])=>{
-if(!q) return true;
-const matchSec = sec.toLowerCase().includes(q);
-const matchNome = Object.values(g.detalhes).some(d=> d.nome.toLowerCase().includes(q));
-return matchSec || matchNome;
-})
-.sort(([,a],[,b])=> b.totalOcorrencias - a.totalOcorrencias);
-for(const [sec,g] of entries){
-const row=el('div','row'); row.role='button';
-const left=el('div'); const name=el('div','name'); name.textContent=sec; left.appendChild(name);
-const sub=el('div','muted'); sub.textContent=`${g.quantidadeSecretarias} entradas`; left.appendChild(sub);
-const stats=el('div','stats');
-stats.append(makePillAT('Ocorrências',g.totalOcorrencias), makePillAT('Detidos',g.totalDetidos));
-row.append(left,stats); row.addEventListener('click',()=>showDetalhes(sec)); list.appendChild(row);
+
+function voltarProprios(){
+ secCrimes.classList.add('hidden');
+ secProprios.classList.remove('hidden');
 }
-if(q && entries.length){
-const totals = entries.reduce((acc,[,g])=>{ acc.oc+=g.totalOcorrencias; acc.det+=g.totalDetidos; acc.sec+=g.quantidadeSecretarias; return acc; },{oc:0,det:0,sec:0});
-const t=el('div','row'); const left=el('div'); const name=el('div','name'); name.textContent='📊 TOTAL FILTRADO'; left.appendChild(name);
-const sub=el('div','muted'); sub.textContent='Resumo das secretarias filtradas'; left.appendChild(sub);
-const stats=el('div','stats');
-stats.append(makePillAT('Ocorrências',totals.oc), makePillAT('Detidos',totals.det));
-t.append(left,stats); list.appendChild(t);
+
+/******** PDF ********/
+
+function gerarPDF(){
+ if(!state.codPro) return;
+
+ const {jsPDF}=window.jspdf;
+ const doc=new jsPDF();
+
+ doc.setFontSize(14);
+ doc.text(`Relatório - ${state.nomePro}`,10,15);
+ doc.text(`Código: ${state.codPro}`,10,22);
+
+ const body=[];
+
+ dadosTp
+ .filter(x=>x.cod==state.codPro)
+ .forEach(r=>{
+  body.push([r.tipo,r.q,r.d]);
+ });
+
+ doc.autoTable({
+  startY:30,
+  head:[['Tipo','Ocorrências','Detidos']],
+  body
+ });
+
+ doc.save(`Relatorio_${state.codPro}.pdf`);
 }
+
+/******** START ********/
+
+async function start(){
+ try{
+  status('Carregando atendimentos...');
+  await load(URL_AT);
+
+  status('Carregando crimes...');
+  await load(URL_TP);
+
+  status('');
+ }catch(e){
+  console.error(e);
+  status('Erro ao carregar dados');
+ }
 }
-function showDetalhes(sec){
-const g=grouped[sec]; if(!g) return;
-$('#detalhes').classList.remove('hidden'); $('#secretarias').classList.add('hidden');
-$('#secTitle').textContent=`Detalhes da Secretaria: ${sec}`;
-const list=$('#detalheList'); list.innerHTML='';
-const entries=Object.entries(g.detalhes).sort(([,a],[,b])=> b.totalOcorrencias - a.totalOcorrencias);
-for(const [,d] of entries){
-const row=el('div','row'); row.role='button';
-const left=el('div');
-const name=el('div','name'); name.textContent=d.nome; left.appendChild(name);
-const sub=el('div','muted'); sub.textContent=`Cód. Pró.: ${d.codPro}`; left.appendChild(sub);
-const stats=el('div','stats');
-stats.append(makePillAT('Ocorrências',d.totalOcorrencias), makePillAT('Detidos',d.detidos));
-row.append(left,stats); row.addEventListener('click',()=>fetchTipos(d.codPro)); list.appendChild(row);
-}
-const t=el('div','row'); const left=el('div'); const name=el('div','name'); name.textContent='📊 TOTAL DA SECRETARIA'; left.appendChild(name);
-const stats=el('div','stats'); stats.append(makePillAT('Ocorrências',g.totalOcorrencias), makePillAT('Detidos',g.totalDetidos));
-t.append(left,stats); list.appendChild(t);
-}
-function backToSecretarias(){ $('#detalhes').classList.add('hidden'); $('#secretarias').classList.remove('hidden'); }
-$('#back').addEventListener('click', backToSecretarias);
-$('#q').addEventListener('input', e => renderSecretarias(e.target.value));
-async function fetchAtendimentos(){
-try{
-const response = await fetch(csvUrl(SHEET_AT, GID_AT));
-if(!response.ok) throw new Error('Falha ao obter o CSV de Atendimentos.');
-const text = await response.text();
-const rows = Papa.parse(text, { delimiter:',', skipEmptyLines:'greedy' }).data
-.filter(r=> Array.isArray(r) && r.some(c=> String(c).trim()!=='') );
-normalizeAT(rows); if(!dataAT.length){ alert('CSV de Atendimentos sem dados válidos.'); return; }
-aggregateAT(); renderAT(); loaded.atendimentos = true;
-}catch(e){
-console.error('Erro ao carregar Atendimentos:', e);
-alert('Erro ao carregar Atendimentos. Verifique se a planilha está pública.');
-}
-}
-let dataTP=[], groupedTP={};
-function normalizeTP(rows){
-const header = rows[0].map(x=>String(x||'').toLowerCase());
-const hasHeader = ['cód. pró.','nome','tipo de crime','quantidade','detidos'].some(k => header.some(c=> c.includes(k)));
-if(hasHeader) rows = rows.slice(1);
-dataTP = rows.map(cols=>{
-const c=[...cols]; while(c.length<5) c.push('');
-const [codPro,nome,tipoCrime,quantidade,detidos]=c.slice(0,5);
-return {
-codPro:String(codPro||'').trim(),
-nome:String(nome||'').trim(),
-tipoCrime:String(tipoCrime||'').trim(),
-quantidade:numberize(quantidade),
-detidos:numberize(detidos)
-}
-}).filter(x=>x.codPro && x.tipoCrime);
-}
-function aggregateTP(){
-groupedTP={};
-for(const r of dataTP){
-const g = groupedTP[r.codPro] || (groupedTP[r.codPro]={nome:r.nome, crimes:{}, totalQuantidade:0, totalDetidos:0, quantidadeCrimes:0});
-if(!g.crimes[r.tipoCrime]){
-g.crimes[r.tipoCrime]={quantidade:0, detidos:0};
-g.quantidadeCrimes++;
-}
-g.crimes[r.tipoCrime].quantidade+=r.quantidade;
-g.crimes[r.tipoCrime].detidos+=r.detidos;
-g.totalQuantidade+=r.quantidade;
-g.totalDetidos+=r.detidos;
-}
-}
-function renderTP(){
-const locais=Object.keys(groupedTP);
-const totals=locais.reduce((a,k)=>{const g=groupedTP[k]; a.qtd+=g.totalQuantidade; a.det+=g.totalDetidos; a.crimes+=g.quantidadeCrimes; return a;},{qtd:0,det:0,crimes:0});
-const cards = $('#tp-cards'); cards.innerHTML='';
-cards.append(
-createCard(locais.length,'Locais'),
-createCard(totals.qtd,'Total Quantidade'),
-createCard(totals.det,'Total Detidos'),
-createCard(totals.crimes,'Tipos de Crime')
-);
-cards.classList.remove('hidden'); $('#tp-panel').classList.remove('hidden');
-const list=$('#tp-list'); list.innerHTML='';
-locais.sort((a,b)=> groupedTP[b].totalQuantidade - groupedTP[a].totalQuantidade).forEach(codPro=>{
-const g=groupedTP[codPro];
-const row=el('div','row');
-const left=el('div');
-const name=el('div','name'); name.textContent=`${g.nome} (${codPro})`; left.appendChild(name);
-const stats=el('div','stats');
-stats.append(
-makePill('Quantidade', g.totalQuantidade),
-makePill('Detidos', g.totalDetidos),
-makePill('Tipos de Crime', g.quantidadeCrimes)
-);
-row.append(left,stats); list.append(row);
-Object.entries(g.crimes).sort(([,a],[,b])=> b.quantidade - a.quantidade).forEach(([tipo,d])=>{
-const subRow=el('div','row');
-const subLeft=el('div'); subLeft.style.paddingLeft='20px';
-const subName=el('div','name'); subName.textContent=tipo; subLeft.appendChild(subName);
-const subStats=el('div','stats');
-subStats.append(
-makePill('Quantidade', d.quantidade),
-makePill('Detidos', d.detidos)
-);
-subRow.append(subLeft,subStats); list.append(subRow);
-});
-});
-const t=el('div','row'); const left=el('div'); const name=el('div','name'); name.textContent='📊 TOTAL GERAL'; left.appendChild(name);
-const stats=el('div','stats');
-stats.append(
-makePill('Quantidade', totals.qtd),
-makePill('Detidos', totals.det)
-);
-t.append(left,stats); list.append(t);
-}
-async function generatePDF() {
-try {
-const codPro = Object.keys(groupedTP)[0];
-if (!codPro) {
-alert('Nenhum dado disponível para gerar o PDF.');
-return;
-}
-const g = groupedTP[codPro];
-const nome = g.nome;
-const crimes = Object.entries(g.crimes).map(([tipo, d]) => [tipo, d.quantidade, d.detidos]);
-const totalQuant = g.totalQuantidade;
-const totalDet = g.totalDetidos;
-const date = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-const { jsPDF } = window.jspdf;
-const doc = new jsPDF({
-orientation: 'portrait',
-unit: 'mm',
-format: 'a4'
-});
-// Definir margens e dimensões da página
-const pageWidth = doc.internal.pageSize.getWidth(); // 210mm
-const pageHeight = doc.internal.pageSize.getHeight(); // 297mm
-const marginLeft = 15;
-const marginRight = 15;
-const usableWidth = pageWidth - marginLeft - marginRight; // 180mm
-const headerHeight = 25; // Altura do cabeçalho
-const tableStartY = 40; // Posição de início da tabela
-const tableEndY = pageHeight - 20; // Posição de fim da tabela (deixando margem inferior)
-// Converte imagem URL em Base64
-const toBase64 = (url) => {
-return fetch(url)
-.then(res => res.blob())
-.then(blob => new Promise((resolve) => {
-const reader = new FileReader();
-reader.onloadend = () => resolve(reader.result);
-reader.readAsDataURL(blob);
-}));
-};
-// Carregar as imagens do logo como base64
-const logoBase64Right = await toBase64('https://arildomello.github.io/propriospublicos/assets/img/gm.png');
-const logoBase64Left = await toBase64('https://arildomello.github.io/propriospublicos/assets/img/londrina.png');
-// Função para adicionar cabeçalho em todas as páginas
-const addHeader = () => {
-// Logo no canto superior esquerdo
-doc.addImage(logoBase64Left, 'PNG', marginLeft, 5, 20, 20);
-// Logo no canto superior direito
-doc.addImage(logoBase64Right, 'PNG', pageWidth - 25, 5, 20, 20);
-// Título com quebras de linha
-const titleLines = [
-'PREFEITURA DO MUNICÍPIO DE LONDRINA',
-'ESTADO DO PARANÁ',
-'SECRETARIA MUNICIPAL DE DEFESA SOCIAL',
-'GUARDA MUNICIPAL DE LONDRINA - DIRETORIA OPERACIONAL'
-];
-doc.setFontSize(10);
-doc.setTextColor(0, 0, 0); // Texto preto
-const lineHeight = 5;
-const startY = 10;
-titleLines.forEach((line, index) => {
-doc.text(line, pageWidth / 2, startY + (index * lineHeight), { align: 'center' });
-});
-};
-// Adicionar cabeçalho à primeira página
-addHeader();
-// Adicionar data de emissão e nome do próprio público (apenas na primeira página)
-let y = headerHeight + 5;
-doc.setFontSize(10);
-doc.text(`\nData de emissão: ${date}`, marginLeft, y);
-y += 5;
-doc.text(`\nNome do Próprio Público: ${nome} (Cód. Pró.: ${codPro})`, marginLeft, y);
-// Adicionar tabela com posições definidas
-doc.autoTable({
-startY: tableStartY, // Início da tabela em 40mm
-margin: { top: tableStartY, left: marginLeft, right: marginRight },
-pageBreak: 'auto', // Quebra de página automática
-tableWidth: usableWidth,
-head: [['Tipo de Crime', 'Quantidade', 'Detidos']],
-body: crimes,
-foot: [['Total Geral', totalQuant, totalDet]],
-theme: 'grid',
-headStyles: {
-fillColor: [41, 128, 185],
-textColor: [255, 255, 255],
-fontStyle: 'bold',
-fontSize: 11
-},
-bodyStyles: {
-fontSize: 10,
-overflow: 'linebreak'
-},
-footStyles: {
-fillColor: [200, 200, 200],
-textColor: [0, 0, 0],
-fontStyle: 'bold',
-fontSize: 11
-},
-styles: {
-font: 'helvetica',
-cellPadding: 2,
-minCellHeight: 6
-},
-columnStyles: {
-0: { cellWidth: usableWidth * 0.65 },
-1: { cellWidth: usableWidth * 0.175, halign: 'right' },
-2: { cellWidth: usableWidth * 0.175, halign: 'right' }
-},
-didDrawPage: (data) => {
-// Adicionar cabeçalho em todas as páginas
-addHeader();
-// Garantir que a tabela não ultrapasse o final da página
-if (data.cursor.y > tableEndY) {
-data.cursor.y = tableStartY; // Reinicia a posição da tabela na próxima página
-}
-}
-});
-doc.save(`Relatorio_${codPro}_${date.replace(/\//g, '-')}.pdf`);
-} catch (e) {
-console.error('Erro ao gerar PDF:', e);
-alert('Erro ao gerar o PDF. Verifique o console para mais detalhes.');
-}
-}
-async function fetchTipos(codProFilter=null){
-try{
-const response = await fetch(csvUrl(SHEET_AT, GID_TP));
-if(!response.ok) throw new Error('Falha ao obter o CSV de Tipos de Atendimento.');
-const text = await response.text();
-const rows = Papa.parse(text, { delimiter:',', skipEmptyLines:'greedy' }).data
-.filter(r=> Array.isArray(r) && r.some(c=> String(c).trim()!=='') );
-normalizeTP(rows);
-if(!dataTP.length){ alert('CSV de Tipos de Atendimento sem dados válidos.'); return; }
-if(codProFilter){
-dataTP = dataTP.filter(x=> x.codPro===codProFilter);
-}
-aggregateTP();
-document.querySelectorAll('main > section').forEach(s=> s.classList.add('hidden'));
-$('#tipos-section').classList.remove('hidden');
-nav.querySelectorAll('a').forEach(x=> x.classList.remove('active'));
-nav.querySelector('[data-target="tipos-section"]').classList.add('active');
-renderTP();
-const hd = $('#tp-panel .panel-hd');
-let btn = $('#gerarPDF');
-if (codProFilter) {
-if (!btn) {
-btn = el('button', 'gerarPDF');
-btn.id = 'gerarPDF';
-btn.textContent = 'Gerar PDF';
-btn.addEventListener('click', generatePDF);
-hd.appendChild(btn);
-}
-} else {
-if (btn) btn.remove();
-}
-loaded.tipos = true;
-}catch(e){
-console.error('Erro ao carregar Tipos de Atendimento:', e);
-alert('Erro ao carregar Tipos de Atendimento. Verifique se a planilha está pública.');
-}
-}
-window.addEventListener('load', ()=>{
-document.getElementById('atendimentos-section').classList.remove('hidden');
-fetchAtendimentos();
-});
+
+start();
 </script>
 </body>
 </html>
